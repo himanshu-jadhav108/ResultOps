@@ -1,0 +1,20 @@
+# Firebase - NEVER commit this
+firebase_key.json
+*.json
+
+# Environment
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# Streamlit
+.streamlit/
+
+# OS
+.DS_Store
+Thumbs.db
