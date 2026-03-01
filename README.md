@@ -46,10 +46,9 @@ ResultOps/
 ├── logo.png                    # App logo shown in sidebar and README
 ├── firebase_key.json           # Firebase service account key (NOT in git)
 ├── .env                        # Environment variables (NOT in git)
-├── .env.example                # Template for environment variables
 ├── requirements.txt            # Python dependencies
 ├── test_connection.py          # Firebase connectivity test script
-├── GUIDE.md                    # Complete Firebase setup and usage guide
+|
 │
 ├── parser/                     # PDF extraction and parsing
 │   ├── pdf_parser.py           # Text extraction via pdfplumber
