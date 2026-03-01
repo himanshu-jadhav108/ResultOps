@@ -7,6 +7,7 @@ import logging
 import os
 import io
 import time
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
@@ -122,7 +123,7 @@ hr { border: none !important; border-top: 1px solid rgba(45,140,255,0.15) !impor
 /* Progress bar */
 [data-testid="stProgressBar"] > div { background: #2d8cff !important; }
 
-/* Sidebar logo */
+/* Sidebar logo fallback */
 .sidebar-logo {
     text-align: center;
     padding: 24px 10px 8px 10px;
@@ -166,26 +167,10 @@ hr { border: none !important; border-top: 1px solid rgba(45,140,255,0.15) !impor
 """, unsafe_allow_html=True)
 
 
-# ── Sidebar ───────────────────────────────────────────────────────────────────
-with st.sidebar:
-    st.markdown('<div class="sidebar-logo">🎓 ResultOps</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sidebar-tagline">University Result Processing Platform</div>', unsafe_allow_html=True)
-    st.markdown("---")
-    page = st.radio(
-        "Navigation",
-        ["📤  Upload Result", "📊  Dashboard", "📁  Export", "📋  History"],
-        label_visibility="collapsed",
-    )
-    st.markdown("---")
-    st.markdown(
-        '<div style="font-size:11px; color:#5a7fa8; text-align:center; padding:8px 0;">'
-        'ResultOps v1.0 · Firebase Edition<br>Savitribai Phule Pune University'
-        '</div>',
-        unsafe_allow_html=True,
-    )
+# ==============================================================================
+# SERVICES  ← MUST be at module level, NOT inside the sidebar block
+# ==============================================================================
 
-
-# ── Cache services ────────────────────────────────────────────────────────────
 @st.cache_resource(show_spinner=False)
 def load_services():
     from analytics.analytics import Analytics
@@ -194,25 +179,29 @@ def load_services():
 
 
 def try_load_services():
+    """Load services with a friendly error card on Firebase failure."""
     try:
         return load_services()
     except Exception as e:
         st.markdown(f"""
-        <div style="background:#1a0a00; border:1px solid #f5a623; border-left:4px solid #f5a623;
-                    border-radius:10px; padding:20px; margin-top:10px;">
+        <div style="background:#1a0a00; border:1px solid #f5a623;
+                    border-left:4px solid #f5a623; border-radius:10px;
+                    padding:20px; margin-top:10px;">
             <div style="color:#f5a623; font-weight:700; font-size:15px; margin-bottom:10px;">
                 ⚠️ Cannot Connect to Firebase
             </div>
             <div style="color:#d4a96a; font-size:13px; line-height:1.8;">
                 <b>Most likely causes:</b><br>
-                &nbsp;&nbsp;• <code>firebase_key.json</code> file not found in project folder<br>
+                &nbsp;&nbsp;• <code>firebase_key.json</code> not found in project folder<br>
                 &nbsp;&nbsp;• Firestore not enabled in Firebase Console<br>
                 &nbsp;&nbsp;• Internet / network issue<br>
-                &nbsp;&nbsp;• Wrong path in <code>FIREBASE_KEY_PATH</code> in .env<br><br>
+                &nbsp;&nbsp;• Missing <code>[firebase]</code> section in Streamlit Cloud secrets<br><br>
                 <b>Quick fix:</b> Run <code>python test_connection.py</code> to diagnose.
             </div>
             <details style="margin-top:10px;">
-                <summary style="color:#7a9cc4; cursor:pointer; font-size:12px;">Show error details</summary>
+                <summary style="color:#7a9cc4; cursor:pointer; font-size:12px;">
+                    Show error details
+                </summary>
                 <code style="font-size:11px; color:#ff4d6d;">{str(e)}</code>
             </details>
         </div>
@@ -220,7 +209,10 @@ def try_load_services():
         return None, None
 
 
-# ── SGPA category helper ──────────────────────────────────────────────────────
+# ==============================================================================
+# HELPERS
+# ==============================================================================
+
 def _sgpa_category(sgpa):
     if sgpa is None:  return "N/A"
     if sgpa >= 7.75:  return "Distinction"
@@ -231,7 +223,11 @@ def _sgpa_category(sgpa):
     return "Fail"
 
 
-# ── Excel report generator ────────────────────────────────────────────────────
+def _excel_filename(metadata):
+    dept = metadata.department_name.replace(" ", "_")[:25]
+    return f"ResultOps_{dept}_Sem{metadata.semester_number}_{metadata.session_type}{metadata.session_year}.xlsx"
+
+
 def _generate_excel_report(metadata, students) -> bytes:
     HEADER_FILL = PatternFill("solid", fgColor="1F4E79")
     ALT_FILL    = PatternFill("solid", fgColor="EBF2FF")
@@ -239,7 +235,7 @@ def _generate_excel_report(metadata, students) -> bytes:
     BORDER_SIDE = Side(style="thin", color="C5D5EA")
     CELL_BORDER = Border(
         left=BORDER_SIDE, right=BORDER_SIDE,
-        top=BORDER_SIDE, bottom=BORDER_SIDE
+        top=BORDER_SIDE, bottom=BORDER_SIDE,
     )
 
     def style_ws(ws, df):
@@ -262,7 +258,7 @@ def _generate_excel_report(metadata, students) -> bytes:
                 len(str(col_name)),
                 *[len(str(ws.cell(row=r, column=col_num).value or ""))
                   for r in range(2, ws.max_row + 1)],
-                0
+                0,
             )
             ws.column_dimensions[col_letter].width = min(max_len + 4, 45)
         ws.row_dimensions[1].height = 28
@@ -271,7 +267,7 @@ def _generate_excel_report(metadata, students) -> bytes:
     with pd.ExcelWriter(output, engine="openpyxl") as writer:
 
         # Sheet 1: Student Master
-        master_rows = [{
+        df1 = pd.DataFrame([{
             "PRN":            s.prn,
             "Seat No":        s.seat_no,
             "Name":           s.name,
@@ -281,14 +277,13 @@ def _generate_excel_report(metadata, students) -> bytes:
             "Subjects":       len(s.subjects),
             "Status":         "PASS" if (s.sgpa or 0) >= 4.0 else "FAIL",
             "Category":       _sgpa_category(s.sgpa),
-        } for s in students]
-        df1 = pd.DataFrame(master_rows)
+        } for s in students])
         df1.to_excel(writer, sheet_name="Student Master", index=False)
         style_ws(writer.sheets["Student Master"], df1)
 
         # Sheet 2: Rank List
         sorted_s = sorted(students, key=lambda s: s.sgpa or 0, reverse=True)
-        rank_rows = [{
+        df2 = pd.DataFrame([{
             "Rank":     i,
             "PRN":      s.prn,
             "Seat No":  s.seat_no,
@@ -296,8 +291,7 @@ def _generate_excel_report(metadata, students) -> bytes:
             "SGPA":     s.sgpa,
             "Status":   "PASS" if (s.sgpa or 0) >= 4.0 else "FAIL",
             "Category": _sgpa_category(s.sgpa),
-        } for i, s in enumerate(sorted_s, 1)]
-        df2 = pd.DataFrame(rank_rows)
+        } for i, s in enumerate(sorted_s, 1)])
         df2.to_excel(writer, sheet_name="Rank List", index=False)
         style_ws(writer.sheets["Rank List"], df2)
 
@@ -349,7 +343,7 @@ def _generate_excel_report(metadata, students) -> bytes:
         # Sheet 5: Summary
         sgpa_vals  = [s.sgpa for s in students if s.sgpa is not None]
         pass_count = sum(1 for s in students if (s.sgpa or 0) >= 4.0)
-        summary_data = [
+        df5 = pd.DataFrame([
             ("University",              metadata.university_name),
             ("College",                 metadata.college_name),
             ("Department",              metadata.department_name),
@@ -366,8 +360,7 @@ def _generate_excel_report(metadata, students) -> bytes:
             ("Distinctions (>=7.75)",   sum(1 for v in sgpa_vals if v >= 7.75)),
             ("First Class (6.75-7.75)", sum(1 for v in sgpa_vals if 6.75 <= v < 7.75)),
             ("Total Subjects",          len(subj_map)),
-        ]
-        df5 = pd.DataFrame(summary_data, columns=["Metric", "Value"])
+        ], columns=["Metric", "Value"])
         df5.to_excel(writer, sheet_name="Summary", index=False)
         style_ws(writer.sheets["Summary"], df5)
 
@@ -375,14 +368,122 @@ def _generate_excel_report(metadata, students) -> bytes:
     return output.read()
 
 
-def _excel_filename(metadata):
-    dept = metadata.department_name.replace(" ", "_")[:25]
-    return f"ResultOps_{dept}_Sem{metadata.semester_number}_{metadata.session_type}{metadata.session_year}.xlsx"
+# ==============================================================================
+# SIDEBAR  ← services are defined ABOVE this block, so they work everywhere
+# ==============================================================================
 
+with st.sidebar:
+
+    # ── Logo ──────────────────────────────────────────────────────────────────
+    logo_path = Path("logo.png")
+    if logo_path.exists():
+        st.image(str(logo_path), use_container_width=True)
+        st.markdown(
+            '<div style="text-align:center; font-size:11px; color:#7fa8d4; '
+            'margin-top:-6px; margin-bottom:4px; letter-spacing:0.5px;">'
+            'University Result Processing Platform</div>',
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown('<div class="sidebar-logo">🎓 ResultOps</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="sidebar-tagline">University Result Processing Platform</div>',
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("---")
+
+    # ── Navigation ────────────────────────────────────────────────────────────
+    page = st.radio(
+        "Navigation",
+        ["📤  Upload Result", "📊  Dashboard", "📁  Export", "📋  History"],
+        label_visibility="collapsed",
+    )
+
+    st.markdown("---")
+
+    # ── Credits / Social links ─────────────────────────────────────────────────
+    st.markdown("---")
+
+    # ── Version info ───────────────────────────────────────────────────────────
+    st.markdown(
+        '<div style="text-align:center; font-size:11px; color:#5a7fa8; '
+        'margin-bottom:6px; letter-spacing:0.5px;">'
+        'ResultOps v1.0 · Firebase Edition<br>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    # ── Built by ───────────────────────────────────────────────────────────────
+    st.markdown(
+        '<div style="text-align:center; font-size:12px; color:#93b5e1; '
+        'font-weight:600; margin-top:10px;">Built with ❤️ by</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<div style="text-align:center; font-size:15px; color:#ffffff; '
+        'font-weight:700; margin-bottom:12px;">Himanshu Jadhav</div>',
+        unsafe_allow_html=True,
+    )
+
+    # ── GitHub ─────────────────────────────────────────────────────────────────
+    st.markdown(
+        '<a href="https://github.com/himanshu-jadhav108" target="_blank" '
+        'style="text-decoration:none;">'
+        '<div style="background:#1a1a1a; border:1px solid #444; border-radius:7px; '
+        'padding:7px 12px; margin-bottom:7px; display:flex; align-items:center; gap:8px;">'
+        '<span style="font-size:11px; color:#e8f0fe; font-weight:500;">GitHub Profile</span>'
+        '</div></a>',
+        unsafe_allow_html=True,
+    )
+
+    # ── LinkedIn ───────────────────────────────────────────────────────────────
+    st.markdown(
+        '<a href="https://www.linkedin.com/in/himanshu-jadhav-328082339" target="_blank" '
+        'style="text-decoration:none;">'
+        '<div style="background:#0a66c2; border-radius:7px; '
+        'padding:7px 12px; margin-bottom:7px; display:flex; align-items:center; gap:8px;">'
+        '<span style="font-size:11px; color:#ffffff; font-weight:500;">LinkedIn</span>'
+        '</div></a>',
+        unsafe_allow_html=True,
+    )
+
+    # ── Instagram ──────────────────────────────────────────────────────────────
+    st.markdown(
+        '<a href="https://www.instagram.com/himanshu_jadhav_108" target="_blank" '
+        'style="text-decoration:none;">'
+        '<div style="background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045); '
+        'border-radius:7px; padding:7px 12px; margin-bottom:7px; '
+        'display:flex; align-items:center; gap:8px;">'
+        '<span style="font-size:11px; color:#ffffff; font-weight:500;">Instagram</span>'
+        '</div></a>',
+        unsafe_allow_html=True,
+    )
+
+    # ── Portfolio ──────────────────────────────────────────────────────────────
+    st.markdown(
+        '<a href="https://himanshu-jadhav-portfolio.vercel.app/" target="_blank" '
+        'style="text-decoration:none;">'
+        '<div style="background:linear-gradient(135deg,#1a4a8a,#2d8cff); '
+        'border-radius:7px; padding:7px 12px; margin-bottom:12px; '
+        'display:flex; align-items:center; gap:8px;">'
+        '<span style="font-size:16px;">🌐</span>'
+        '<span style="font-size:11px; color:#ffffff; font-weight:500;">Portfolio</span>'
+        '</div></a>',
+        unsafe_allow_html=True,
+    )
+
+    # ── Copyright ──────────────────────────────────────────────────────────────
+    st.markdown(
+        '<div style="text-align:center; font-size:10px; color:#3d5a7a; '
+        'margin-top:4px;">© 2025 ResultOps</div>',
+        unsafe_allow_html=True,
+    )
 
 # ==============================================================================
 # PAGE: UPLOAD RESULT
 # ==============================================================================
+
 def page_upload():
     st.title("📤 Upload University Result PDF")
     st.markdown(
@@ -402,7 +503,9 @@ def page_upload():
         <div style="text-align:center; padding:48px; color:#5a7fa8;">
             <div style="font-size:52px; margin-bottom:12px;">📄</div>
             <div style="font-size:18px; font-weight:600; color:#93b5e1;">No file uploaded yet</div>
-            <div style="font-size:13px; margin-top:8px;">Drag & drop or click Browse above to get started</div>
+            <div style="font-size:13px; margin-top:8px;">
+                Drag & drop or click Browse above to get started
+            </div>
         </div>
         """, unsafe_allow_html=True)
         return
@@ -436,52 +539,45 @@ def page_upload():
         logger.exception("Parsing error")
         return
 
-    # ── Metadata — custom HTML cards (no truncation) ───────────────────────────
+    # ── Metadata cards — full text, no truncation ──────────────────────────────
     st.markdown("### 🔍 Detected Metadata")
-
     c1, c2, c3, c4, c5 = st.columns(5)
 
     with c1:
         st.markdown(f"""
-        <div class="meta-card" style="border-top: 3px solid #2d8cff;">
+        <div class="meta-card" style="border-top:3px solid #2d8cff;">
             <div class="meta-label">🏛️ University</div>
             <div class="meta-value">{metadata.university_name}</div>
-        </div>
-        """, unsafe_allow_html=True)
+        </div>""", unsafe_allow_html=True)
 
     with c2:
         st.markdown(f"""
-        <div class="meta-card" style="border-top: 3px solid #2d8cff;">
+        <div class="meta-card" style="border-top:3px solid #2d8cff;">
             <div class="meta-label">🏫 College</div>
             <div class="meta-value">{metadata.college_name}</div>
-        </div>
-        """, unsafe_allow_html=True)
+        </div>""", unsafe_allow_html=True)
 
     with c3:
         st.markdown(f"""
-        <div class="meta-card" style="border-top: 3px solid #f5a623;">
+        <div class="meta-card" style="border-top:3px solid #f5a623;">
             <div class="meta-label">📚 Department</div>
             <div class="meta-value">{metadata.department_name}</div>
-        </div>
-        """, unsafe_allow_html=True)
+        </div>""", unsafe_allow_html=True)
 
     with c4:
         st.markdown(f"""
-        <div class="meta-card" style="border-top: 3px solid #00d97e;">
+        <div class="meta-card" style="border-top:3px solid #00d97e;">
             <div class="meta-label">📋 Semester</div>
             <div class="meta-value">Semester {metadata.semester_number}</div>
-        </div>
-        """, unsafe_allow_html=True)
+        </div>""", unsafe_allow_html=True)
 
     with c5:
         st.markdown(f"""
-        <div class="meta-card" style="border-top: 3px solid #a78bfa;">
+        <div class="meta-card" style="border-top:3px solid #a78bfa;">
             <div class="meta-label">📅 Session</div>
             <div class="meta-value">{metadata.session_type} {metadata.session_year}</div>
-        </div>
-        """, unsafe_allow_html=True)
+        </div>""", unsafe_allow_html=True)
 
-    # Small spacer after HTML cards
     st.markdown("<div style='margin-top:16px'></div>", unsafe_allow_html=True)
     st.markdown("---")
 
@@ -503,7 +599,7 @@ def page_upload():
         if validation.is_valid:
             st.markdown("""
             <div style="background:#0a2e1a; border:1px solid #00d97e; border-radius:12px;
-                        padding:28px; text-align:center; height:100%;">
+                        padding:28px; text-align:center;">
                 <div style="font-size:40px;">✅</div>
                 <div style="font-size:17px; font-weight:700; color:#00d97e; margin-top:10px;">
                     Validation Passed
@@ -511,12 +607,11 @@ def page_upload():
                 <div style="color:#4dbb88; margin-top:6px; font-size:13px;">
                     Ready to save to database
                 </div>
-            </div>
-            """, unsafe_allow_html=True)
+            </div>""", unsafe_allow_html=True)
         else:
             st.markdown("""
             <div style="background:#2e0a0a; border:1px solid #ff4d6d; border-radius:12px;
-                        padding:28px; text-align:center; height:100%;">
+                        padding:28px; text-align:center;">
                 <div style="font-size:40px;">❌</div>
                 <div style="font-size:17px; font-weight:700; color:#ff4d6d; margin-top:10px;">
                     Validation Failed
@@ -524,8 +619,7 @@ def page_upload():
                 <div style="color:#cc6677; margin-top:6px; font-size:13px;">
                     Fix errors before saving
                 </div>
-            </div>
-            """, unsafe_allow_html=True)
+            </div>""", unsafe_allow_html=True)
 
     st.markdown("<div style='margin-top:16px'></div>", unsafe_allow_html=True)
 
@@ -533,7 +627,6 @@ def page_upload():
     if students:
         st.markdown("---")
         st.markdown(f"### 👥 Student Preview — {len(students)} records detected")
-
         preview_rows = [{
             "PRN":      s.prn,
             "Seat No":  s.seat_no,
@@ -542,9 +635,7 @@ def page_upload():
             "Subjects": len(s.subjects),
             "Status":   "✅ PASS" if (s.sgpa or 0) >= 4.0 else "❌ FAIL",
         } for s in students[:15]]
-
         st.dataframe(pd.DataFrame(preview_rows), use_container_width=True, hide_index=True)
-
         if len(students) > 15:
             st.caption(f"Showing first 15 of {len(students)} students.")
 
@@ -574,8 +665,7 @@ def page_upload():
             <b style="color:#e8f0fe;">Report includes 5 sheets:</b><br>
             📋 Student Master &nbsp;·&nbsp; 🏆 Rank List &nbsp;·&nbsp;
             📚 Subject Analytics<br>📊 SGPA Distribution &nbsp;·&nbsp; 📝 Summary
-        </div>
-        """, unsafe_allow_html=True)
+        </div>""", unsafe_allow_html=True)
 
     # ── Save to DB ─────────────────────────────────────────────────────────────
     st.markdown("---")
@@ -644,6 +734,7 @@ def page_upload():
 # ==============================================================================
 # PAGE: DASHBOARD
 # ==============================================================================
+
 def page_dashboard():
     st.title("📊 Analytics Dashboard")
 
@@ -651,7 +742,6 @@ def page_dashboard():
     if analytics is None:
         return
 
-    # ── Filters ───────────────────────────────────────────────────────────────
     st.markdown("### 🔎 Select Data")
     f1, f2, f3, f4 = st.columns(4)
 
@@ -675,6 +765,7 @@ def page_dashboard():
     dept_select = f3.selectbox("📚 Department", dept_list)
 
     semester_key = None
+    rank_df      = pd.DataFrame()   # initialise so it's always defined
     semesters    = analytics.get_semesters_for_department(dept_select)
     if semesters:
         sem_labels = {
@@ -690,7 +781,6 @@ def page_dashboard():
 
     st.markdown("---")
 
-    # ── Summary ────────────────────────────────────────────────────────────────
     summary = analytics.semester_summary(semester_key)
     if not summary:
         st.warning("No data found for this semester.")
@@ -698,16 +788,15 @@ def page_dashboard():
 
     st.markdown("### 📈 Semester Overview")
     m1, m2, m3, m4, m5, m6 = st.columns(6)
-    m1.metric("👥 Students",      summary["total_students"])
-    m2.metric("📊 Avg SGPA",      summary["avg_sgpa"])
-    m3.metric("⭐ Highest SGPA",  summary["max_sgpa"])
-    m4.metric("🏆 Distinctions",  summary["distinctions"])
-    m5.metric("✅ Passed",         summary["pass_count"])
-    m6.metric("📈 Pass %",         f"{summary['pass_percentage']}%")
+    m1.metric("👥 Students",     summary["total_students"])
+    m2.metric("📊 Avg SGPA",     summary["avg_sgpa"])
+    m3.metric("⭐ Highest SGPA", summary["max_sgpa"])
+    m4.metric("🏆 Distinctions", summary["distinctions"])
+    m5.metric("✅ Passed",        summary["pass_count"])
+    m6.metric("📈 Pass %",        f"{summary['pass_percentage']}%")
 
     st.markdown("---")
 
-    # ── Chart + Top 10 ─────────────────────────────────────────────────────────
     chart_col, top_col = st.columns([3, 2])
 
     with chart_col:
@@ -732,7 +821,6 @@ def page_dashboard():
 
     st.markdown("---")
 
-    # ── Subject Analytics ──────────────────────────────────────────────────────
     st.markdown("### 📚 Subject-wise Analytics")
     subj_df = analytics.subject_analytics(semester_key)
     if not subj_df.empty:
@@ -744,12 +832,15 @@ def page_dashboard():
                 return "background-color:#3d0012; color:#ff4d6d; font-weight:600"
             except:
                 return ""
-        styled = subj_df.style.map(color_pass, subset=["Pass %"])
-        st.dataframe(styled, use_container_width=True, hide_index=True)
+        st.dataframe(
+            subj_df.style.map(color_pass, subset=["Pass %"]),
+            use_container_width=True,
+            hide_index=True,
+        )
     else:
         st.info("No subject data available.")
 
-    # ── Full Rank List ──────────────────────────────────────────────────────────
+    # ── Full Rank List + Fail List ─────────────────────────────────────────────
     if not rank_df.empty:
         st.markdown("---")
         with st.expander("📋 Full Rank List — click to expand"):
@@ -767,7 +858,6 @@ def page_dashboard():
                 hide_index=True,
             )
 
-        # ── Fail List ──────────────────────────────────────────────────────────
         fail_df = rank_df[rank_df["Status"] == "FAIL"]
         if not fail_df.empty:
             with st.expander(f"⚠️ Fail List — {len(fail_df)} students"):
@@ -781,6 +871,7 @@ def page_dashboard():
 # ==============================================================================
 # PAGE: EXPORT
 # ==============================================================================
+
 def page_export():
     st.title("📁 Export Results")
     st.markdown("Generate a styled Excel workbook from any uploaded semester.")
@@ -815,8 +906,6 @@ def page_export():
         return
 
     st.markdown("---")
-
-    # Quick preview
     st.markdown("### 📊 Quick Preview")
     summary = analytics.semester_summary(semester_key)
     if summary:
@@ -827,7 +916,6 @@ def page_export():
         p4.metric("🏆 Distinctions", summary["distinctions"])
 
     st.markdown("---")
-
     btn_col, _ = st.columns([2, 3])
     with btn_col:
         if st.button("📥 Generate Excel Report", type="primary", use_container_width=True):
@@ -837,7 +925,6 @@ def page_export():
                     safe_dept   = dept_select.replace(" ", "_")[:20]
                     safe_sem    = sem_label.replace(" ", "_").replace("—", "").strip()[:15]
                     filename    = f"ResultOps_{safe_dept}_{safe_sem}.xlsx"
-
                     st.download_button(
                         label="⬇️ Download Excel Report",
                         data=excel_bytes,
@@ -845,7 +932,7 @@ def page_export():
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                         use_container_width=True,
                     )
-                    st.success(f"✅ Ready! Click the button above to download.")
+                    st.success("✅ Ready! Click the button above to download.")
                 except Exception as e:
                     st.error(f"Export failed: {e}")
 
@@ -853,6 +940,7 @@ def page_export():
 # ==============================================================================
 # PAGE: HISTORY
 # ==============================================================================
+
 def page_history():
     st.title("📋 Upload History")
     st.markdown("All previously uploaded semester results.")
@@ -870,9 +958,10 @@ def page_history():
         <div style="text-align:center; padding:60px; color:#5a7fa8;">
             <div style="font-size:52px; margin-bottom:12px;">📭</div>
             <div style="font-size:18px; font-weight:600; color:#93b5e1;">No uploads yet</div>
-            <div style="font-size:13px; margin-top:8px;">Go to Upload Result to add your first semester</div>
-        </div>
-        """, unsafe_allow_html=True)
+            <div style="font-size:13px; margin-top:8px;">
+                Go to Upload Result to add your first semester
+            </div>
+        </div>""", unsafe_allow_html=True)
         return
 
     h1, h2, h3 = st.columns(3)
@@ -890,7 +979,7 @@ def page_history():
     # Admin delete
     st.markdown("---")
     with st.expander("🔴 Admin: Delete a Semester (Irreversible)"):
-        st.warning("⚠️ This permanently deletes all student records for that semester. Cannot be undone.")
+        st.warning("⚠️ This permanently deletes all student records. Cannot be undone.")
         admin_pw    = st.text_input("🔐 Admin Password", type="password", key="admin_pw")
         expected_pw = os.environ.get("ADMIN_PASSWORD", "")
 
@@ -925,6 +1014,7 @@ def page_history():
 # ==============================================================================
 # ROUTER
 # ==============================================================================
+
 if page == "📤  Upload Result":
     page_upload()
 elif page == "📊  Dashboard":
