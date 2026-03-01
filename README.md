@@ -329,7 +329,6 @@ Full details in **[GUIDE.md](GUIDE.md)**
 
 **Himanshu Jadhav**
 *Second-Year Engineering Student — AI & Data Science*
-*JSPM Narhe Technical Campus, Pune*
 
 <br/>
 
