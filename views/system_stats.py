@@ -1,6 +1,7 @@
 """
 System Stats page — global Firebase database metrics.
 """
+
 import pandas as pd
 import streamlit as st
 from datetime import datetime
@@ -14,6 +15,7 @@ def render():
 
     try:
         from database.db import get_db
+
         db = get_db()
     except Exception as e:
         st.error(f"❌ Cannot connect to database: {e}")
@@ -22,9 +24,12 @@ def render():
     @st.cache_data(ttl=300)
     def get_system_stats():
         stats = {
-            "total_students": 0, "total_semesters": 0,
-            "total_records": 0, "total_pdfs": 0,
-            "department_breakdown": {}, "yearly_stats": {},
+            "total_students": 0,
+            "total_semesters": 0,
+            "total_records": 0,
+            "total_pdfs": 0,
+            "department_breakdown": {},
+            "yearly_stats": {},
             "last_updated": datetime.now(),
         }
         try:
@@ -34,7 +39,9 @@ def render():
                 d = sem.to_dict()
                 stats["total_pdfs"] += 1
                 dept = d.get("department", "Unknown")
-                stats["department_breakdown"][dept] = stats["department_breakdown"].get(dept, 0) + 1
+                stats["department_breakdown"][dept] = (
+                    stats["department_breakdown"].get(dept, 0) + 1
+                )
                 year = str(d.get("session_year", "Unknown"))
                 if year not in stats["yearly_stats"]:
                     stats["yearly_stats"][year] = {"count": 0, "students": 0}
@@ -51,28 +58,43 @@ def render():
 
     # ── Key metrics ────────────────────────────────────────────────────────────
     m1, m2, m3, m4 = st.columns(4)
-    m1.metric("👨‍🎓 Total Students",  f"{stats['total_students']:,}",
-              f"{stats['total_semesters']} Semesters")
-    m2.metric("📁 Total Semesters",   stats["total_semesters"],
-              f"{stats['total_pdfs']} PDFs processed")
-    m3.metric("📝 Total Records",     f"{stats['total_records']:,}")
+    m1.metric(
+        "👨‍🎓 Total Students",
+        f"{stats['total_students']:,}",
+        f"{stats['total_semesters']} Semesters",
+    )
+    m2.metric(
+        "📁 Total Semesters",
+        stats["total_semesters"],
+        f"{stats['total_pdfs']} PDFs processed",
+    )
+    m3.metric("📝 Total Records", f"{stats['total_records']:,}")
     storage_eff = (
         stats["total_students"] / stats["total_records"] * 100
-        if stats["total_records"] > 0 else 0
+        if stats["total_records"] > 0
+        else 0
     )
-    m4.metric("💾 Storage Efficiency", f"{storage_eff:.1f}%",
-              help="Ratio of students to total records")
+    m4.metric(
+        "💾 Storage Efficiency",
+        f"{storage_eff:.1f}%",
+        help="Ratio of students to total records",
+    )
 
     st.markdown("---")
 
     # ── Department breakdown ───────────────────────────────────────────────────
     if stats["department_breakdown"]:
         st.markdown("### 🏛️ Department Distribution")
-        dept_df = pd.DataFrame([
-            {"Department": k, "Semesters": v}
-            for k, v in sorted(stats["department_breakdown"].items(),
-                               key=lambda x: x[1], reverse=True)
-        ])
+        dept_df = pd.DataFrame(
+            [
+                {"Department": k, "Semesters": v}
+                for k, v in sorted(
+                    stats["department_breakdown"].items(),
+                    key=lambda x: x[1],
+                    reverse=True,
+                )
+            ]
+        )
         col1, col2 = st.columns([2, 1])
         with col1:
             st.bar_chart(dept_df.set_index("Department"), color=c["accent"])
@@ -82,10 +104,12 @@ def render():
     # ── Yearly trends ──────────────────────────────────────────────────────────
     if stats["yearly_stats"]:
         st.markdown("### 📈 Yearly Trends")
-        year_df = pd.DataFrame([
-            {"Year": k, "Semesters": v["count"], "Students": v["students"]}
-            for k, v in sorted(stats["yearly_stats"].items())
-        ])
+        year_df = pd.DataFrame(
+            [
+                {"Year": k, "Semesters": v["count"], "Students": v["students"]}
+                for k, v in sorted(stats["yearly_stats"].items())
+            ]
+        )
         st.line_chart(year_df.set_index("Year")[["Semesters", "Students"]])
 
     # ── System health ──────────────────────────────────────────────────────────

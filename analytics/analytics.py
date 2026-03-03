@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 # ── Dataclasses ───────────────────────────────────────────────────────────────
 
+
 @dataclass
 class SemesterStats:
     semester_id: str
@@ -49,19 +50,27 @@ class SubjectDifficulty:
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+
 def _categorize_sgpa(sgpa: Optional[float]) -> str:
-    if sgpa is None:  return "N/A"
-    if sgpa >= 7.75:  return "Distinction"
-    if sgpa >= 6.75:  return "First Class"
-    if sgpa >= 6.0:   return "Higher Second"
-    if sgpa >= 5.0:   return "Second Class"
-    if sgpa >= 4.0:   return "Pass"
+    if sgpa is None:
+        return "N/A"
+    if sgpa >= 7.75:
+        return "Distinction"
+    if sgpa >= 6.75:
+        return "First Class"
+    if sgpa >= 6.0:
+        return "Higher Second"
+    if sgpa >= 5.0:
+        return "Second Class"
+    if sgpa >= 4.0:
+        return "Pass"
     return "Fail"
 
 
 # ══════════════════════════════════════════════════════════════════════════════
 # MAIN ANALYTICS CLASS
 # ══════════════════════════════════════════════════════════════════════════════
+
 
 class Analytics:
     """Single entry-point for all analytics — queries Firebase Firestore."""
@@ -74,7 +83,7 @@ class Analytics:
     # ------------------------------------------------------------------
 
     def get_universities(self) -> list[dict]:
-        docs  = self.db.collection("semesters").stream()
+        docs = self.db.collection("semesters").stream()
         names = sorted({d.to_dict().get("university", "") for d in docs} - {""})
         return [{"id": n, "name": n} for n in names]
 
@@ -101,12 +110,14 @@ class Analytics:
         results = []
         for d in docs:
             data = d.to_dict()
-            results.append({
-                "id":              d.id,
-                "semester_number": data.get("semester_number"),
-                "session_type":    data.get("session_type"),
-                "session_year":    data.get("session_year"),
-            })
+            results.append(
+                {
+                    "id": d.id,
+                    "semester_number": data.get("semester_number"),
+                    "session_type": data.get("session_type"),
+                    "session_year": data.get("session_year"),
+                }
+            )
         return sorted(results, key=lambda x: x.get("semester_number") or 0)
 
     # ------------------------------------------------------------------
@@ -129,19 +140,21 @@ class Analytics:
         records = self._get_results(semester_key)
         if not records:
             return {}
-        sgpas    = [r["sgpa"] for r in records if r.get("sgpa") is not None]
+        sgpas = [r["sgpa"] for r in records if r.get("sgpa") is not None]
         statuses = [r.get("result_status", "") for r in records]
-        pass_c   = statuses.count("PASS")
+        pass_c = statuses.count("PASS")
         return {
-            "total_students":  len(records),
-            "avg_sgpa":        round(sum(sgpas) / len(sgpas), 2) if sgpas else 0,
-            "max_sgpa":        max(sgpas, default=0),
-            "min_sgpa":        min(sgpas, default=0),
-            "distinctions":    sum(1 for s in sgpas if s >= 7.75),
-            "first_class":     sum(1 for s in sgpas if 6.75 <= s < 7.75),
-            "pass_count":      pass_c,
-            "fail_count":      len(records) - pass_c,
-            "pass_percentage": round(pass_c / len(statuses) * 100, 1) if statuses else 0,
+            "total_students": len(records),
+            "avg_sgpa": round(sum(sgpas) / len(sgpas), 2) if sgpas else 0,
+            "max_sgpa": max(sgpas, default=0),
+            "min_sgpa": min(sgpas, default=0),
+            "distinctions": sum(1 for s in sgpas if s >= 7.75),
+            "first_class": sum(1 for s in sgpas if 6.75 <= s < 7.75),
+            "pass_count": pass_c,
+            "fail_count": len(records) - pass_c,
+            "pass_percentage": (
+                round(pass_c / len(statuses) * 100, 1) if statuses else 0
+            ),
         }
 
     def student_rank_list(self, semester_key: str) -> pd.DataFrame:
@@ -156,15 +169,17 @@ class Analytics:
         rows = []
         for i, r in enumerate(records, start=1):
             sgpa = r.get("sgpa")
-            rows.append({
-                "Rank":     i,
-                "PRN":      r.get("prn", ""),
-                "Seat No":  r.get("seat_no", ""),
-                "Name":     r.get("name", ""),
-                "SGPA":     sgpa,
-                "Status":   r.get("result_status", ""),
-                "Category": _categorize_sgpa(sgpa),
-            })
+            rows.append(
+                {
+                    "Rank": i,
+                    "PRN": r.get("prn", ""),
+                    "Seat No": r.get("seat_no", ""),
+                    "Name": r.get("name", ""),
+                    "SGPA": sgpa,
+                    "Status": r.get("result_status", ""),
+                    "Category": _categorize_sgpa(sgpa),
+                }
+            )
 
         return pd.DataFrame(rows)
 
@@ -181,28 +196,30 @@ class Analytics:
 
         rows = []
         for code, entries in sorted(subject_map.items()):
-            totals   = [e["total"] for e in entries if e.get("total") is not None]
-            grades   = [e.get("grade") for e in entries]
-            passed   = sum(1 for g in grades if g not in ("F", "FF", "AB", None))
+            totals = [e["total"] for e in entries if e.get("total") is not None]
+            grades = [e.get("grade") for e in entries]
+            passed = sum(1 for g in grades if g not in ("F", "FF", "AB", None))
             appeared = len(entries)
-            rows.append({
-                "subject_code": code,
-                "Appeared":     appeared,
-                "Passed":       passed,
-                "Failed":       appeared - passed,
-                "Pass %":       round(passed / appeared * 100, 1) if appeared else 0,
-                "Highest":      max(totals, default=0),
-                "Lowest":       min(totals, default=0),
-                "Average":      round(sum(totals) / len(totals), 2) if totals else 0,
-            })
+            rows.append(
+                {
+                    "subject_code": code,
+                    "Appeared": appeared,
+                    "Passed": passed,
+                    "Failed": appeared - passed,
+                    "Pass %": round(passed / appeared * 100, 1) if appeared else 0,
+                    "Highest": max(totals, default=0),
+                    "Lowest": min(totals, default=0),
+                    "Average": round(sum(totals) / len(totals), 2) if totals else 0,
+                }
+            )
         return pd.DataFrame(rows)
 
     def sgpa_distribution(self, semester_key: str) -> pd.DataFrame:
         records = self._get_results(semester_key)
-        sgpas   = [r["sgpa"] for r in records if r.get("sgpa") is not None]
+        sgpas = [r["sgpa"] for r in records if r.get("sgpa") is not None]
         if not sgpas:
             return pd.DataFrame(columns=["SGPA Range", "Count"])
-        bins   = [0, 4, 5, 6, 6.75, 7.75, 8.5, 10]
+        bins = [0, 4, 5, 6, 6.75, 7.75, 8.5, 10]
         labels = ["<4", "4-5", "5-6", "6-6.75", "6.75-7.75", "7.75-8.5", ">8.5"]
         df = pd.DataFrame({"SGPA": sgpas})
         df["Range"] = pd.cut(df["SGPA"], bins=bins, labels=labels)
@@ -227,16 +244,18 @@ class Analytics:
         rows = []
         for d in docs:
             data = d.to_dict()
-            rows.append({
-                "Semester Key": d.id,
-                "University":   data.get("university", ""),
-                "College":      data.get("college", ""),
-                "Department":   data.get("department", ""),
-                "Semester No":  data.get("semester_number", ""),
-                "Session":      f"{data.get('session_type','')} {data.get('session_year','')}",
-                "Students":     data.get("student_count", ""),
-                "Uploaded At":  str(data.get("created_at", ""))[:10],
-            })
+            rows.append(
+                {
+                    "Semester Key": d.id,
+                    "University": data.get("university", ""),
+                    "College": data.get("college", ""),
+                    "Department": data.get("department", ""),
+                    "Semester No": data.get("semester_number", ""),
+                    "Session": f"{data.get('session_type','')} {data.get('session_year','')}",
+                    "Students": data.get("student_count", ""),
+                    "Uploaded At": str(data.get("created_at", ""))[:10],
+                }
+            )
         return pd.DataFrame(rows)
 
     def delete_semester(self, semester_key: str) -> int:
@@ -261,7 +280,9 @@ class Analytics:
             batch.commit()
 
         self.db.collection("semesters").document(semester_key).delete()
-        logger.info(f"Deleted semester {semester_key}: {total_deleted} result docs removed")
+        logger.info(
+            f"Deleted semester {semester_key}: {total_deleted} result docs removed"
+        )
         return total_deleted
 
     # ------------------------------------------------------------------
@@ -281,16 +302,18 @@ class Analytics:
             # Get semester metadata
             doc = self.db.collection("semesters").document(key).get()
             meta = doc.to_dict() if doc.exists else {}
-            rows.append({
-                "Semester": f"Sem {meta.get('semester_number','')} {meta.get('session_type','')} {meta.get('session_year','')}",
-                "Students": summary["total_students"],
-                "Avg SGPA": summary["avg_sgpa"],
-                "Max SGPA": summary["max_sgpa"],
-                "Pass %":   summary["pass_percentage"],
-                "Distinctions": summary["distinctions"],
-                "First Class":  summary["first_class"],
-                "Failures":     summary["fail_count"],
-            })
+            rows.append(
+                {
+                    "Semester": f"Sem {meta.get('semester_number','')} {meta.get('session_type','')} {meta.get('session_year','')}",
+                    "Students": summary["total_students"],
+                    "Avg SGPA": summary["avg_sgpa"],
+                    "Max SGPA": summary["max_sgpa"],
+                    "Pass %": summary["pass_percentage"],
+                    "Distinctions": summary["distinctions"],
+                    "First Class": summary["first_class"],
+                    "Failures": summary["fail_count"],
+                }
+            )
 
         df = pd.DataFrame(rows)
         return df
@@ -301,7 +324,7 @@ class Analytics:
             return {"message": "Need at least 2 semesters for trend analysis"}
 
         first = comparison_df.iloc[0]["Avg SGPA"]
-        last  = comparison_df.iloc[-1]["Avg SGPA"]
+        last = comparison_df.iloc[-1]["Avg SGPA"]
         change = last - first
 
         trend = "stable"
@@ -311,9 +334,13 @@ class Analytics:
             trend = "📉 declining"
 
         return {
-            "sgpa_trend":     trend,
-            "best_semester":  comparison_df.loc[comparison_df["Avg SGPA"].idxmax(), "Semester"],
-            "worst_semester": comparison_df.loc[comparison_df["Avg SGPA"].idxmin(), "Semester"],
+            "sgpa_trend": trend,
+            "best_semester": comparison_df.loc[
+                comparison_df["Avg SGPA"].idxmax(), "Semester"
+            ],
+            "worst_semester": comparison_df.loc[
+                comparison_df["Avg SGPA"].idxmin(), "Semester"
+            ],
             "change_per_sem": round(change / len(comparison_df), 2),
         }
 
@@ -331,11 +358,17 @@ class Analytics:
             return pd.DataFrame()
 
         stats: dict[str, dict] = defaultdict(
-            lambda: {"marks": [], "passed": 0, "failed": 0, "highest": 0, "lowest": 9999}
+            lambda: {
+                "marks": [],
+                "passed": 0,
+                "failed": 0,
+                "highest": 0,
+                "lowest": 9999,
+            }
         )
         for r in records:
             for subj in r.get("subjects", []):
-                code  = subj.get("subject_code", "?")
+                code = subj.get("subject_code", "?")
                 total = subj.get("total") or 0
                 grade = subj.get("grade", "F")
                 s = stats[code]
@@ -353,21 +386,23 @@ class Analytics:
             appeared = s["passed"] + s["failed"]
             if appeared == 0:
                 continue
-            avg  = sum(s["marks"]) / len(s["marks"]) if s["marks"] else 0
+            avg = sum(s["marks"]) / len(s["marks"]) if s["marks"] else 0
             fail_rate = s["failed"] / appeared * 100
             difficulty = (fail_rate * 0.6) + ((100 - avg) * 0.4)
-            rows.append({
-                "Subject Code": code,
-                "Appeared":     appeared,
-                "Passed":       s["passed"],
-                "Failed":       s["failed"],
-                "Pass %":       round(s["passed"] / appeared * 100, 1),
-                "Fail %":       round(fail_rate, 1),
-                "Avg Marks":    round(avg, 1),
-                "Highest":      s["highest"],
-                "Lowest":       s["lowest"] if s["lowest"] < 9999 else 0,
-                "Difficulty":   round(difficulty, 1),
-            })
+            rows.append(
+                {
+                    "Subject Code": code,
+                    "Appeared": appeared,
+                    "Passed": s["passed"],
+                    "Failed": s["failed"],
+                    "Pass %": round(s["passed"] / appeared * 100, 1),
+                    "Fail %": round(fail_rate, 1),
+                    "Avg Marks": round(avg, 1),
+                    "Highest": s["highest"],
+                    "Lowest": s["lowest"] if s["lowest"] < 9999 else 0,
+                    "Difficulty": round(difficulty, 1),
+                }
+            )
 
         rows.sort(key=lambda x: x["Difficulty"], reverse=True)
         for i, row in enumerate(rows, 1):
@@ -377,6 +412,7 @@ class Analytics:
 
 
 # ── Convenience functions (backward compatibility) ────────────────────────────
+
 
 def categorize_sgpa(sgpa: Optional[float]) -> str:
     return _categorize_sgpa(sgpa)

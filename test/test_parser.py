@@ -10,27 +10,27 @@ from parser.refactored_parser import (
     ResultParser,
     ParsedSubject,
     StudentRecord,
-    PDFMetadata
+    PDFMetadata,
 )
 
 
 class TestMetadataExtractor:
     """Test metadata extraction."""
-    
+
     def test_extract_university(self):
         text = "UNIVERSITY: Savitribai Phule Pune University\nCollege: COEP"
         extractor = MetadataExtractor()
         metadata = extractor.extract(text)
         assert metadata.university == "Savitribai Phule Pune University"
         assert metadata.college == "COEP"
-    
+
     def test_extract_semester(self):
         text = "SEMESTER: 5\nSession: Winter 2024"
         extractor = MetadataExtractor()
         metadata = extractor.extract(text)
         assert metadata.semester == 5
         assert metadata.session == "Winter 2024"
-    
+
     def test_infer_sppu(self):
         text = "SPPU Result Ledger\nCollege: XYZ"
         extractor = MetadataExtractor()
@@ -40,7 +40,7 @@ class TestMetadataExtractor:
 
 class TestStudentBlockParser:
     """Test student block parsing."""
-    
+
     def test_split_blocks(self):
         text = """
         PRN: 1234567890 SEAT NO: A123456 NAME: John Doe
@@ -54,7 +54,7 @@ class TestStudentBlockParser:
         parser = StudentBlockParser()
         blocks = parser.split_student_blocks(text)
         assert len(blocks) == 2
-    
+
     def test_parse_prn_extraction(self):
         block = "PRN: 123ABC456DEF SEAT NO: S123 NAME: Test Student\nSGPA: 8.0"
         parser = StudentBlockParser()
@@ -64,7 +64,7 @@ class TestStudentBlockParser:
         assert student.seat_no == "S123"
         assert student.name == "Test Student"
         assert student.sgpa == 8.0
-    
+
     def test_parse_credits(self):
         block = """
         PRN: TEST123 SEAT NO: S1 NAME: Test
@@ -76,7 +76,7 @@ class TestStudentBlockParser:
         assert student.credits_earned == 22
         assert student.credits_total == 24
         assert student.status == "FAIL"  # 22 < 24
-    
+
     def test_parse_subjects(self):
         block = """
         PRN: TEST123 SEAT NO: S1 NAME: Test
@@ -94,13 +94,19 @@ class TestStudentBlockParser:
 
 class TestConfidenceCalculator:
     """Test confidence scoring."""
-    
+
     def test_perfect_confidence(self):
         students = [
             StudentRecord(
-                prn="1234567890", seat_no="S1", name="Test", semester=5,
-                sgpa=8.5, credits_earned=24, credits_total=24, status="PASS",
-                subjects=[ParsedSubject(code="410241", grade="O", total=80)]
+                prn="1234567890",
+                seat_no="S1",
+                name="Test",
+                semester=5,
+                sgpa=8.5,
+                credits_earned=24,
+                credits_total=24,
+                status="PASS",
+                subjects=[ParsedSubject(code="410241", grade="O", total=80)],
             )
         ]
         metadata = PDFMetadata(
@@ -110,13 +116,19 @@ class TestConfidenceCalculator:
         score, warnings = calculator.calculate_confidence(students, metadata, "test")
         assert score == 1.0
         assert len(warnings) == 0
-    
+
     def test_low_confidence_missing_metadata(self):
         students = [
             StudentRecord(
-                prn="123", seat_no="S1", name="", semester=0,
-                sgpa=15.0, credits_earned=30, credits_total=24, status="PASS",
-                subjects=[]
+                prn="123",
+                seat_no="S1",
+                name="",
+                semester=0,
+                sgpa=15.0,
+                credits_earned=30,
+                credits_total=24,
+                status="PASS",
+                subjects=[],
             )
         ]
         metadata = PDFMetadata()
@@ -128,38 +140,40 @@ class TestConfidenceCalculator:
 
 class TestRankCalculation:
     """Test ranking logic."""
-    
+
     def test_basic_ranking(self):
         from analytics.analytics import categorize_sgpa
+
         students = [
-            {'prn': '1', 'name': 'A', 'sgpa': 9.0, 'total_marks': 850},
-            {'prn': '2', 'name': 'B', 'sgpa': 8.5, 'total_marks': 800},
-            {'prn': '3', 'name': 'C', 'sgpa': 8.0, 'total_marks': 750},
+            {"prn": "1", "name": "A", "sgpa": 9.0, "total_marks": 850},
+            {"prn": "2", "name": "B", "sgpa": 8.5, "total_marks": 800},
+            {"prn": "3", "name": "C", "sgpa": 8.0, "total_marks": 750},
         ]
         ranked = RankCalculator.calculate_ranks(students)
-        assert ranked[0]['rank'] == 1
-        assert ranked[1]['rank'] == 2
-        assert ranked[2]['rank'] == 3
-        assert ranked[0]['class_label'] == "Distinction"
-    
+        assert ranked[0]["rank"] == 1
+        assert ranked[1]["rank"] == 2
+        assert ranked[2]["rank"] == 3
+        assert ranked[0]["class_label"] == "Distinction"
+
     def test_tie_handling(self):
         from analytics.analytics import categorize_sgpa
+
         students = [
-            {'prn': '1', 'name': 'A', 'sgpa': 8.5, 'total_marks': 800},
-            {'prn': '2', 'name': 'B', 'sgpa': 8.5, 'total_marks': 800},  # Tie
-            {'prn': '3', 'name': 'C', 'sgpa': 8.0, 'total_marks': 750},
+            {"prn": "1", "name": "A", "sgpa": 8.5, "total_marks": 800},
+            {"prn": "2", "name": "B", "sgpa": 8.5, "total_marks": 800},  # Tie
+            {"prn": "3", "name": "C", "sgpa": 8.0, "total_marks": 750},
         ]
         ranked = RankCalculator.calculate_ranks(students)
-        assert ranked[0]['rank'] == 1
-        assert ranked[1]['rank'] == 2  # Same rank for tie
-        assert ranked[2]['rank'] == 3  # Skips to 3 (not 2)
+        assert ranked[0]["rank"] == 1
+        assert ranked[1]["rank"] == 2  # Same rank for tie
+        assert ranked[2]["rank"] == 3  # Skips to 3 (not 2)
 
 
 # Integration tests
 @pytest.mark.integration
 class TestFullParsing:
     """Integration tests with sample PDF structures."""
-    
+
     def test_parse_sample_text(self):
         sample_text = """
         UNIVERSITY: Savitribai Phule Pune University
@@ -191,13 +205,13 @@ class TestFullParsing:
         Winter Session 2024 SGPA : 5.20  Credits Earned/Total : 20/24
         SGPA: (SEM-5) 5.20
         """
-        
+
         parser = ResultParser()
         metadata = MetadataExtractor().extract(sample_text)
         blocks = StudentBlockParser().split_student_blocks(sample_text)
         students = [StudentBlockParser().parse_student_block(b) for b in blocks]
         students = [s for s in students if s]
-        
+
         assert metadata.university is not None
         assert len(students) == 2
         assert students[0].sgpa == 8.5

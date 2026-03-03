@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 class DuplicateSemesterError(Exception):
     """Raised when a semester result has already been uploaded."""
+
     pass
 
 
@@ -30,7 +31,9 @@ class ResultService:
     def __init__(self):
         self.db = get_client()
 
-    def save_results(self, metadata: PDFMetadata, students: list[StudentRecord]) -> dict:
+    def save_results(
+        self, metadata: PDFMetadata, students: list[StudentRecord]
+    ) -> dict:
         """
         Save all parsed results to Firestore.
 
@@ -50,57 +53,62 @@ class ResultService:
             )
 
         # ── Save semester metadata document ──────────────────────────────────
-        sem_ref.set({
-            "university":      metadata.university_name,
-            "college":         metadata.college_name,
-            "department":      metadata.department_name,
-            "semester_number": metadata.semester_number,
-            "session_type":    metadata.session_type,
-            "session_year":    metadata.session_year,
-            "student_count":   len(students),
-            "created_at":      datetime.now(timezone.utc).isoformat(),
-        })
+        sem_ref.set(
+            {
+                "university": metadata.university_name,
+                "college": metadata.college_name,
+                "department": metadata.department_name,
+                "semester_number": metadata.semester_number,
+                "session_type": metadata.session_type,
+                "session_year": metadata.session_year,
+                "student_count": len(students),
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            }
+        )
 
         # ── Save students in Firestore batches (max 500 per batch) ───────────
-        batch       = self.db.batch()
+        batch = self.db.batch()
         batch_count = 0
 
         for student in students:
             doc_ref = self.db.collection("results").document()
-            batch.set(doc_ref, {
-                "semester_key":    sem_key,
-                "university":      metadata.university_name,
-                "college":         metadata.college_name,
-                "department":      metadata.department_name,
-                "semester_number": metadata.semester_number,
-                "session_type":    metadata.session_type,
-                "session_year":    metadata.session_year,
-                "prn":             student.prn,
-                "seat_no":         student.seat_no,
-                "name":            student.name,
-                "sgpa":            student.sgpa,
-                "credits_earned":  student.credits_earned,
-                "credits_total":   student.credits_total,
-                "result_status":   "PASS" if (student.sgpa or 0) >= 4.0 else "FAIL",
-                "subjects": [
-                    {
-                        "subject_code": s.subject_code,
-                        "components":   s.components,
-                        "total":        s.total,
-                        "grade":        s.grade,
-                        "grade_point":  s.grade_point,
-                        "credit_point": s.credit_point,
-                    }
-                    for s in student.subjects
-                ],
-                "created_at": datetime.now(timezone.utc).isoformat(),
-            })
+            batch.set(
+                doc_ref,
+                {
+                    "semester_key": sem_key,
+                    "university": metadata.university_name,
+                    "college": metadata.college_name,
+                    "department": metadata.department_name,
+                    "semester_number": metadata.semester_number,
+                    "session_type": metadata.session_type,
+                    "session_year": metadata.session_year,
+                    "prn": student.prn,
+                    "seat_no": student.seat_no,
+                    "name": student.name,
+                    "sgpa": student.sgpa,
+                    "credits_earned": student.credits_earned,
+                    "credits_total": student.credits_total,
+                    "result_status": "PASS" if (student.sgpa or 0) >= 4.0 else "FAIL",
+                    "subjects": [
+                        {
+                            "subject_code": s.subject_code,
+                            "components": s.components,
+                            "total": s.total,
+                            "grade": s.grade,
+                            "grade_point": s.grade_point,
+                            "credit_point": s.credit_point,
+                        }
+                        for s in student.subjects
+                    ],
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                },
+            )
             batch_count += 1
 
             # Commit at Firestore's 499-operation limit
             if batch_count == 499:
                 batch.commit()
-                batch       = self.db.batch()
+                batch = self.db.batch()
                 batch_count = 0
 
         if batch_count > 0:
@@ -109,14 +117,14 @@ class ResultService:
         logger.info(f"Saved {len(students)} students under semester key: {sem_key}")
 
         return {
-            "university":        metadata.university_name,
-            "college":           metadata.college_name,
-            "department":        metadata.department_name,
-            "semester":          metadata.semester_number,
-            "session":           f"{metadata.session_type} {metadata.session_year}",
+            "university": metadata.university_name,
+            "college": metadata.college_name,
+            "department": metadata.department_name,
+            "semester": metadata.semester_number,
+            "session": f"{metadata.session_type} {metadata.session_year}",
             "students_inserted": len(students),
-            "results_inserted":  len(students),
-            "marks_inserted":    sum(len(s.subjects) for s in students),
+            "results_inserted": len(students),
+            "marks_inserted": sum(len(s.subjects) for s in students),
         }
 
 

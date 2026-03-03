@@ -19,12 +19,17 @@ class AuthManager:
         self._init_state()
 
     def _load_hashes(self):
-        self.read_hash  = os.getenv("READ_PASSWORD_HASH", "")
+        self.read_hash = os.getenv("READ_PASSWORD_HASH", "")
         self.write_hash = os.getenv("WRITE_PASSWORD_HASH", "")
         self.admin_hash = os.getenv("ADMIN_PASSWORD_HASH", "")
 
     def _init_state(self):
-        for key in ("read_authenticated", "write_authenticated", "admin_authenticated", "auth_error"):
+        for key in (
+            "read_authenticated",
+            "write_authenticated",
+            "admin_authenticated",
+            "auth_error",
+        ):
             if key not in st.session_state:
                 st.session_state[key] = False if key != "auth_error" else None
 
@@ -78,7 +83,12 @@ class AuthManager:
 
     # ── Logout ────────────────────────────────────────────────────────────────
     def reset_authentication(self):
-        for k in ("read_authenticated", "write_authenticated", "admin_authenticated", "auth_error"):
+        for k in (
+            "read_authenticated",
+            "write_authenticated",
+            "admin_authenticated",
+            "auth_error",
+        ):
             st.session_state[k] = False if k != "auth_error" else None
 
     def logout(self):
@@ -86,8 +96,14 @@ class AuthManager:
         st.rerun()
 
     def render_logout_button(self):
-        if self.is_read_authenticated or self.is_write_authenticated or self.is_admin_authenticated:
-            if st.sidebar.button("🚪 Logout", type="secondary", use_container_width=True):
+        if (
+            self.is_read_authenticated
+            or self.is_write_authenticated
+            or self.is_admin_authenticated
+        ):
+            if st.sidebar.button(
+                "🚪 Logout", type="secondary", use_container_width=True
+            ):
                 self.logout()
 
     # ── Gate helpers (render login UI if not authenticated) ────────────────────
@@ -116,7 +132,9 @@ class AuthManager:
             with st.container():
                 st.info("🔐 **WRITE Authentication Required**")
                 st.write("Enter WRITE password to save data to database.")
-                pw = st.text_input("WRITE Password", type="password", key="write_pw_input")
+                pw = st.text_input(
+                    "WRITE Password", type="password", key="write_pw_input"
+                )
                 c1, c2 = st.columns([1, 3])
                 with c1:
                     if st.button("Authenticate", type="primary", key="write_auth_btn"):
@@ -149,6 +167,7 @@ class AuthManager:
 
 # Global instance
 auth_manager = AuthManager()
+
 
 # Convenience functions
 def hash_password(password: str) -> str:

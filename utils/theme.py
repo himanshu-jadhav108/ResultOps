@@ -9,57 +9,57 @@ import streamlit as st
 # ── Color palettes ────────────────────────────────────────────────────────────
 
 DARK = {
-    "bg":           "#060e1f",
+    "bg": "#060e1f",
     "sidebar_grad": "linear-gradient(180deg, #0a1628 0%, #0f2c59 60%, #1a4a8a 100%)",
-    "card":         "#0d1f3c",
-    "card_border":  "rgba(45,140,255,0.25)",
-    "accent":       "#2d8cff",
-    "accent2":      "#1a4a8a",
-    "text":         "#e8f0fe",
-    "text_muted":   "#7a9cc4",
-    "text_sub":     "#93b5e1",
+    "card": "#0d1f3c",
+    "card_border": "rgba(45,140,255,0.25)",
+    "accent": "#2d8cff",
+    "accent2": "#1a4a8a",
+    "text": "#e8f0fe",
+    "text_muted": "#7a9cc4",
+    "text_sub": "#93b5e1",
     "sidebar_text": "#e8f0fe",
-    "sidebar_hr":   "rgba(45,140,255,0.3)",
-    "success":      "#00d97e",
-    "warning":      "#f5a623",
-    "error":        "#ff4d6d",
-    "hr":           "rgba(45,140,255,0.15)",
-    "input_bg":     "#0d1f3c",
-    "upload_bg":    "#0d1f3c",
-    "upload_border":"rgba(45,140,255,0.4)",
-    "select_bg":    "#0d1f3c",
-    "expander_bg":  "#0d1f3c",
+    "sidebar_hr": "rgba(45,140,255,0.3)",
+    "success": "#00d97e",
+    "warning": "#f5a623",
+    "error": "#ff4d6d",
+    "hr": "rgba(45,140,255,0.15)",
+    "input_bg": "#0d1f3c",
+    "upload_bg": "#0d1f3c",
+    "upload_border": "rgba(45,140,255,0.4)",
+    "select_bg": "#0d1f3c",
+    "expander_bg": "#0d1f3c",
     "expander_bdr": "rgba(45,140,255,0.2)",
     "metric_label": "#7a9cc4",
     "metric_value": "#ffffff",
-    "tab_bg":       "#0d1f3c",
+    "tab_bg": "#0d1f3c",
 }
 
 LIGHT = {
-    "bg":           "#f4f7fb",
+    "bg": "#f4f7fb",
     "sidebar_grad": "linear-gradient(180deg, #1a3a6b 0%, #1e4d8c 60%, #2563b0 100%)",
-    "card":         "#ffffff",
-    "card_border":  "rgba(37,99,176,0.18)",
-    "accent":       "#2563b0",
-    "accent2":      "#1a3a6b",
-    "text":         "#0f1e3a",
-    "text_muted":   "#4a6fa5",
-    "text_sub":     "#1a3a6b",
+    "card": "#ffffff",
+    "card_border": "rgba(37,99,176,0.18)",
+    "accent": "#2563b0",
+    "accent2": "#1a3a6b",
+    "text": "#0f1e3a",
+    "text_muted": "#4a6fa5",
+    "text_sub": "#1a3a6b",
     "sidebar_text": "#e8f0fe",
-    "sidebar_hr":   "rgba(255,255,255,0.25)",
-    "success":      "#0d7a45",
-    "warning":      "#b45309",
-    "error":        "#be123c",
-    "hr":           "rgba(37,99,176,0.15)",
-    "input_bg":     "#ffffff",
-    "upload_bg":    "#eef3fc",
-    "upload_border":"rgba(37,99,176,0.4)",
-    "select_bg":    "#ffffff",
-    "expander_bg":  "#eef3fc",
+    "sidebar_hr": "rgba(255,255,255,0.25)",
+    "success": "#0d7a45",
+    "warning": "#b45309",
+    "error": "#be123c",
+    "hr": "rgba(37,99,176,0.15)",
+    "input_bg": "#ffffff",
+    "upload_bg": "#eef3fc",
+    "upload_border": "rgba(37,99,176,0.4)",
+    "select_bg": "#ffffff",
+    "expander_bg": "#eef3fc",
     "expander_bdr": "rgba(37,99,176,0.2)",
     "metric_label": "#4a6fa5",
     "metric_value": "#0f1e3a",
-    "tab_bg":       "#eef3fc",
+    "tab_bg": "#eef3fc",
 }
 
 
@@ -93,7 +93,10 @@ class ThemeManager:
         c = self.colors
         # Build the complete light-mode override block
         # This forces text colors on EVERY possible Streamlit element
-        light_overrides = "" if self.is_dark else f"""
+        light_overrides = (
+            ""
+            if self.is_dark
+            else f"""
 /* ══════════════════════════════════════════════════════════════════
    LIGHT THEME — FORCE ALL TEXT TO DARK COLORS
    ══════════════════════════════════════════════════════════════════ */
@@ -274,8 +277,10 @@ section[data-testid="stFileUploader"] button[kind="secondary"] span {{
     color: {c['accent']} !important;
 }}
 """
+        )
 
-        st.markdown(f"""
+        st.markdown(
+            f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
@@ -514,7 +519,9 @@ hr {{
 
 {light_overrides}
 </style>
-""", unsafe_allow_html=True)
+""",
+            unsafe_allow_html=True,
+        )
 
 
 # Global instance

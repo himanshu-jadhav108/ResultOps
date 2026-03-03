@@ -33,7 +33,9 @@ class ValidationReport:
         if self.students_missing_prn:
             lines.append(f"❌ Blocks with Empty PRN: {len(self.students_missing_prn)}")
         if self.semester_inconsistency:
-            lines.append(f"⚠️ Semester number inconsistency detected. Expected: {self.expected_semester}")
+            lines.append(
+                f"⚠️ Semester number inconsistency detected. Expected: {self.expected_semester}"
+            )
         for anomaly in self.anomalies:
             lines.append(f"⚠️ {anomaly}")
         if self.is_valid:
@@ -49,17 +51,17 @@ def validate_students(
 ) -> ValidationReport:
     """
     Validate parsed student records before database insertion.
-    
+
     Checks:
     - No empty PRNs
     - All students have SGPA
     - Consistent semester number
     - Consistent subject count (with tolerance)
-    
+
     Args:
         students: List of parsed StudentRecord objects.
         expected_semester: Semester number from metadata (for consistency check).
-    
+
     Returns:
         ValidationReport with pass/fail status and details.
     """
@@ -106,7 +108,11 @@ def validate_students(
     if len(semester_numbers) > 1:
         semester_inconsistency = True
         anomalies.append(f"Multiple semester numbers found: {semester_numbers}")
-    if expected_semester and semester_numbers and expected_semester not in semester_numbers:
+    if (
+        expected_semester
+        and semester_numbers
+        and expected_semester not in semester_numbers
+    ):
         anomalies.append(
             f"Metadata says semester {expected_semester} but students show {semester_numbers}"
         )

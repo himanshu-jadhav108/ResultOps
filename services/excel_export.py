@@ -15,13 +15,12 @@ from analytics.analytics import Analytics
 
 logger = logging.getLogger(__name__)
 
-_HEADER_FILL  = PatternFill("solid", fgColor="1F4E79")
-_ALT_FILL     = PatternFill("solid", fgColor="D6E4F7")
-_HEADER_FONT  = Font(bold=True, color="FFFFFF", size=11)
-_BORDER_SIDE  = Side(style="thin", color="AAAAAA")
-_CELL_BORDER  = Border(
-    left=_BORDER_SIDE, right=_BORDER_SIDE,
-    top=_BORDER_SIDE, bottom=_BORDER_SIDE
+_HEADER_FILL = PatternFill("solid", fgColor="1F4E79")
+_ALT_FILL = PatternFill("solid", fgColor="D6E4F7")
+_HEADER_FONT = Font(bold=True, color="FFFFFF", size=11)
+_BORDER_SIDE = Side(style="thin", color="AAAAAA")
+_CELL_BORDER = Border(
+    left=_BORDER_SIDE, right=_BORDER_SIDE, top=_BORDER_SIDE, bottom=_BORDER_SIDE
 )
 
 
@@ -31,13 +30,15 @@ class ExcelExportService:
     def __init__(self):
         self.analytics = Analytics()
 
-    def generate_excel(self, semester_id: str, title: str = "ResultOps Report") -> bytes:
+    def generate_excel(
+        self, semester_id: str, title: str = "ResultOps Report"
+    ) -> bytes:
         """
         Generate a complete Excel workbook with:
         - Rank List sheet
         - Subject Analytics sheet
         - SGPA Distribution sheet
-        
+
         Returns:
             Raw bytes of the .xlsx file.
         """
@@ -80,8 +81,8 @@ def _style_sheet(ws, df: pd.DataFrame) -> None:
     # Style header row
     for col_num, col_name in enumerate(df.columns, start=1):
         cell = ws.cell(row=1, column=col_num)
-        cell.fill   = _HEADER_FILL
-        cell.font   = _HEADER_FONT
+        cell.fill = _HEADER_FILL
+        cell.font = _HEADER_FONT
         cell.alignment = Alignment(horizontal="center", vertical="center")
         cell.border = _CELL_BORDER
 
@@ -90,7 +91,7 @@ def _style_sheet(ws, df: pd.DataFrame) -> None:
         fill = _ALT_FILL if row_num % 2 == 0 else PatternFill()
         for col_num in range(1, ws.max_column + 1):
             cell = ws.cell(row=row_num, column=col_num)
-            cell.fill   = fill
+            cell.fill = fill
             cell.border = _CELL_BORDER
             cell.alignment = Alignment(horizontal="left", vertical="center")
 
@@ -99,7 +100,10 @@ def _style_sheet(ws, df: pd.DataFrame) -> None:
         col_letter = get_column_letter(col_num)
         max_len = max(
             len(str(col_name)),
-            *[len(str(ws.cell(row=r, column=col_num).value or "")) for r in range(2, ws.max_row + 1)],
+            *[
+                len(str(ws.cell(row=r, column=col_num).value or ""))
+                for r in range(2, ws.max_row + 1)
+            ],
             0
         )
         ws.column_dimensions[col_letter].width = min(max_len + 4, 40)
@@ -121,17 +125,19 @@ def generate_excel(metadata, students) -> bytes:
     for rank, s in enumerate(
         sorted(students, key=lambda x: (x.sgpa or 0), reverse=True), start=1
     ):
-        student_rows.append({
-            "Rank":           rank,
-            "PRN":            s.prn,
-            "Seat No":        s.seat_no,
-            "Name":           s.name,
-            "SGPA":           s.sgpa,
-            "Credits Earned": s.credits_earned,
-            "Credits Total":  s.credits_total,
-            "Status":         s.status,
-            "Subjects":       len(s.subjects),
-        })
+        student_rows.append(
+            {
+                "Rank": rank,
+                "PRN": s.prn,
+                "Seat No": s.seat_no,
+                "Name": s.name,
+                "SGPA": s.sgpa,
+                "Credits Earned": s.credits_earned,
+                "Credits Total": s.credits_total,
+                "Status": s.status,
+                "Subjects": len(s.subjects),
+            }
+        )
     rank_df = pd.DataFrame(student_rows)
 
     # ── Build subject analytics DataFrame ───────────────────────────────────
@@ -143,37 +149,41 @@ def generate_excel(metadata, students) -> bytes:
 
     subj_rows = []
     for code, entries in sorted(subject_map.items()):
-        totals  = [e.total for e in entries if e.total is not None]
-        grades  = [e.grade for e in entries]
-        passed  = sum(1 for g in grades if g and g not in ("F", "FF", "AB"))
+        totals = [e.total for e in entries if e.total is not None]
+        grades = [e.grade for e in entries]
+        passed = sum(1 for g in grades if g and g not in ("F", "FF", "AB"))
         appeared = len(entries)
-        subj_rows.append({
-            "Subject Code": code,
-            "Appeared":     appeared,
-            "Passed":       passed,
-            "Failed":       appeared - passed,
-            "Pass %":       round(passed / appeared * 100, 1) if appeared else 0,
-            "Highest":      max(totals, default=0),
-            "Average":      round(sum(totals) / len(totals), 2) if totals else 0,
-        })
+        subj_rows.append(
+            {
+                "Subject Code": code,
+                "Appeared": appeared,
+                "Passed": passed,
+                "Failed": appeared - passed,
+                "Pass %": round(passed / appeared * 100, 1) if appeared else 0,
+                "Highest": max(totals, default=0),
+                "Average": round(sum(totals) / len(totals), 2) if totals else 0,
+            }
+        )
     subj_df = pd.DataFrame(subj_rows)
 
     # ── Build summary DataFrame ──────────────────────────────────────────────
-    sgpas    = [s.sgpa for s in students if s.sgpa is not None]
+    sgpas = [s.sgpa for s in students if s.sgpa is not None]
     statuses = [s.status for s in students]
     summary_data = {
-        "University":      getattr(metadata, "university", ""),
-        "College":         getattr(metadata, "college", ""),
-        "Department":      getattr(metadata, "department", ""),
-        "Semester":        getattr(metadata, "semester", ""),
-        "Session":         getattr(metadata, "session", ""),
-        "Total Students":  len(students),
-        "Avg SGPA":        round(sum(sgpas) / len(sgpas), 2) if sgpas else 0,
-        "Max SGPA":        max(sgpas, default=0),
-        "Min SGPA":        min(sgpas, default=0),
-        "Pass Count":      statuses.count("PASS"),
-        "Fail Count":      statuses.count("FAIL"),
-        "Pass %":          round(statuses.count("PASS") / len(statuses) * 100, 1) if statuses else 0,
+        "University": getattr(metadata, "university", ""),
+        "College": getattr(metadata, "college", ""),
+        "Department": getattr(metadata, "department", ""),
+        "Semester": getattr(metadata, "semester", ""),
+        "Session": getattr(metadata, "session", ""),
+        "Total Students": len(students),
+        "Avg SGPA": round(sum(sgpas) / len(sgpas), 2) if sgpas else 0,
+        "Max SGPA": max(sgpas, default=0),
+        "Min SGPA": min(sgpas, default=0),
+        "Pass Count": statuses.count("PASS"),
+        "Fail Count": statuses.count("FAIL"),
+        "Pass %": (
+            round(statuses.count("PASS") / len(statuses) * 100, 1) if statuses else 0
+        ),
     }
     summary_df = pd.DataFrame(list(summary_data.items()), columns=["Metric", "Value"])
 
@@ -192,4 +202,3 @@ def generate_excel(metadata, students) -> bytes:
 
     output.seek(0)
     return output.read()
-
