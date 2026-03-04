@@ -7,7 +7,6 @@ from parser.refactored_parser import (
     MetadataExtractor,
     StudentBlockParser,
     ParsingConfidenceCalculator,
-    ResultParser,
     ParsedSubject,
     StudentRecord,
     PDFMetadata,
