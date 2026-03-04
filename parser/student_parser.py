@@ -15,13 +15,21 @@ logger = logging.getLogger(__name__)
 @dataclass
 class SubjectResult:
     subject_code: str
+<<<<<<< HEAD
     components: dict          # e.g. {'ESE': 45, 'ISE': 18, 'TW': 20}
+=======
+    components: dict  # e.g. {'ESE': 45, 'ISE': 18, 'TW': 20}
+>>>>>>> origin/develop
     total: Optional[int]
     grade: Optional[str]
     grade_point: Optional[float]
     credit_point: Optional[float]
     is_absent: bool = False
+<<<<<<< HEAD
     is_ac: bool = False       # Atkt Carry / AC subject
+=======
+    is_ac: bool = False  # Atkt Carry / AC subject
+>>>>>>> origin/develop
 
 
 @dataclass
@@ -38,6 +46,7 @@ class StudentRecord:
 
 
 # Regex patterns
+<<<<<<< HEAD
 _PRN_PATTERN = re.compile(r'PRN\s*[:\-]?\s*(\S+)', re.IGNORECASE)
 _SEAT_PATTERN = re.compile(r'SEAT\s*NO\.?\s*[:\-]?\s*(\S+)', re.IGNORECASE)
 _NAME_PATTERN = re.compile(r'NAME\s*[:\-]?\s*([^\n]+?)(?:\s+Mother|$)', re.IGNORECASE)
@@ -56,20 +65,51 @@ _GRADE_PATTERN = re.compile(r'\b(O|A\+|A|B\+|B|C|D|F|P|AB|FF|E)\b')
 
 # Numeric pattern for mark components
 _NUMBER_PATTERN = re.compile(r'\b(\d{1,3})\b')
+=======
+_PRN_PATTERN = re.compile(r"PRN\s*[:\-]?\s*(\S+)", re.IGNORECASE)
+_SEAT_PATTERN = re.compile(r"SEAT\s*NO\.?\s*[:\-]?\s*(\S+)", re.IGNORECASE)
+_NAME_PATTERN = re.compile(r"NAME\s*[:\-]?\s*([^\n]+?)(?:\s+Mother|$)", re.IGNORECASE)
+_MOTHER_PATTERN = re.compile(r"Mother'?s?\s+Name\s*[:\-]+\s*([^\n]+)", re.IGNORECASE)
+_SEM_PATTERN = re.compile(r"SEMESTER\s*[:\-]?\s*(\d+)", re.IGNORECASE)
+_SGPA_PATTERN = re.compile(r"SGPA\s*[:\-]?\s*(?:\(\w+\))?\s*([0-9.]+)", re.IGNORECASE)
+_CREDITS_PATTERN = re.compile(
+    r"Credits?\s+Earned\s*/\s*Total\s*[:\-]?\s*(\d+)\s*/\s*(\d+)", re.IGNORECASE
+)
+
+# Subject line: starts with digits and uppercase letters (e.g. 410241, CS101, 22510)
+_SUBJECT_LINE_PATTERN = re.compile(r"^\d{4,}[A-Z0-9_]*\b")
+
+# Grade pattern: single letter grades like A+, A, B, C, D, F, O, P, AB
+_GRADE_PATTERN = re.compile(r"\b(O|A\+|A|B\+|B|C|D|F|P|AB|FF|E)\b")
+
+# Numeric pattern for mark components
+_NUMBER_PATTERN = re.compile(r"\b(\d{1,3})\b")
+>>>>>>> origin/develop
 
 
 def parse_students(full_text: str) -> list[StudentRecord]:
     """
     Split full PDF text into per-student blocks and parse each one.
+<<<<<<< HEAD
     
     Args:
         full_text: Complete text extracted from the PDF.
     
+=======
+
+    Args:
+        full_text: Complete text extracted from the PDF.
+
+>>>>>>> origin/develop
     Returns:
         List of StudentRecord objects.
     """
     # Split on PRN marker; re-attach the prefix
+<<<<<<< HEAD
     raw_blocks = re.split(r'\nPRN\s*[:\-]?\s*', full_text)
+=======
+    raw_blocks = re.split(r"\nPRN\s*[:\-]?\s*", full_text)
+>>>>>>> origin/develop
 
     students = []
     for i, block in enumerate(raw_blocks):
@@ -91,7 +131,11 @@ def parse_students(full_text: str) -> list[StudentRecord]:
 
 def _parse_student_block(block: str) -> Optional[StudentRecord]:
     """Parse a single student text block into a StudentRecord."""
+<<<<<<< HEAD
     lines = [l.strip() for l in block.splitlines() if l.strip()]
+=======
+    lines = [line.strip() for line in block.splitlines() if line.strip()]
+>>>>>>> origin/develop
 
     # Extract header fields
     prn = _search(block, _PRN_PATTERN)
@@ -103,7 +147,11 @@ def _parse_student_block(block: str) -> Optional[StudentRecord]:
     mother_name = _search(block, _MOTHER_PATTERN) or ""
     semester_number = int(_search(block, _SEM_PATTERN) or "0")
     sgpa = _parse_float(_search_last(block, _SGPA_PATTERN))
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> origin/develop
     credits_match = _CREDITS_PATTERN.search(block)
     credits_earned = int(credits_match.group(1)) if credits_match else None
     credits_total = int(credits_match.group(2)) if credits_match else None
@@ -128,7 +176,11 @@ def _parse_subject_lines(lines: list[str]) -> list[SubjectResult]:
     """
     Dynamically parse subject lines from a student block.
     Each subject line starts with a subject code (digits/uppercase letters).
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> origin/develop
     Strategy:
     - Find lines matching subject code pattern
     - Extract all numbers from the line
@@ -146,11 +198,19 @@ def _parse_subject_lines(lines: list[str]) -> list[SubjectResult]:
             continue
 
         subject_code = tokens[0]
+<<<<<<< HEAD
         is_ac = bool(re.search(r'\bAC\b', line, re.IGNORECASE))
         is_absent = bool(re.search(r'\bAB\b|\bAbsent\b', line, re.IGNORECASE))
 
         # Extract all numbers and grade from the rest of the line
         rest = ' '.join(tokens[1:])
+=======
+        is_ac = bool(re.search(r"\bAC\b", line, re.IGNORECASE))
+        is_absent = bool(re.search(r"\bAB\b|\bAbsent\b", line, re.IGNORECASE))
+
+        # Extract all numbers and grade from the rest of the line
+        rest = " ".join(tokens[1:])
+>>>>>>> origin/develop
 
         numbers = [int(m) for m in _NUMBER_PATTERN.findall(rest)]
         grade_match = _GRADE_PATTERN.search(rest)
@@ -166,10 +226,17 @@ def _parse_subject_lines(lines: list[str]) -> list[SubjectResult]:
             # Heuristic: last large number (>= 10 typically) before grade position is total
             # grade_point is usually float, credit_point is float too
             # Numbers ordering: component marks... total credits grade_point credit_point
+<<<<<<< HEAD
             
             # Find float values for grade_point and credit_point
             float_vals = [float(m) for m in re.findall(r'\b\d+\.\d+\b', rest)]
             
+=======
+
+            # Find float values for grade_point and credit_point
+            float_vals = [float(m) for m in re.findall(r"\b\d+\.\d+\b", rest)]
+
+>>>>>>> origin/develop
             if float_vals:
                 credit_point = float_vals[-1] if len(float_vals) >= 2 else None
                 grade_point = float_vals[-2] if len(float_vals) >= 2 else float_vals[0]
@@ -180,6 +247,7 @@ def _parse_subject_lines(lines: list[str]) -> list[SubjectResult]:
                 component_nums = numbers[:-1]  # everything before total
 
                 # Name components generically if we don't know headers
+<<<<<<< HEAD
                 component_labels = ['ESE', 'ISE', 'TW', 'PR', 'OR']
                 for idx, val in enumerate(component_nums):
                     label = component_labels[idx] if idx < len(component_labels) else f'C{idx+1}'
@@ -195,6 +263,29 @@ def _parse_subject_lines(lines: list[str]) -> list[SubjectResult]:
             is_absent=is_absent,
             is_ac=is_ac,
         ))
+=======
+                component_labels = ["ESE", "ISE", "TW", "PR", "OR"]
+                for idx, val in enumerate(component_nums):
+                    label = (
+                        component_labels[idx]
+                        if idx < len(component_labels)
+                        else f"C{idx+1}"
+                    )
+                    components[label] = val
+
+        subjects.append(
+            SubjectResult(
+                subject_code=subject_code,
+                components=components,
+                total=total,
+                grade=grade,
+                grade_point=grade_point,
+                credit_point=credit_point,
+                is_absent=is_absent,
+                is_ac=is_ac,
+            )
+        )
+>>>>>>> origin/develop
 
     return subjects
 
@@ -222,5 +313,9 @@ def _parse_float(value: Optional[str]) -> Optional[float]:
 def _clean_name(name: str) -> str:
     """Remove trailing junk from extracted name."""
     # Remove patterns like 'Mother', extra whitespace
+<<<<<<< HEAD
     name = re.sub(r'\s+Mother.*$', '', name, flags=re.IGNORECASE)
+=======
+    name = re.sub(r"\s+Mother.*$", "", name, flags=re.IGNORECASE)
+>>>>>>> origin/develop
     return name.strip()

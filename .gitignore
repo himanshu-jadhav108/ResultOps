@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Firebase - NEVER commit this
 firebase_key.json
 *.json
@@ -18,3 +19,74 @@ venv/
 # OS
 .DS_Store
 Thumbs.db
+=======
+# ── Environment & Secrets ─────────────────────────────────────────
+.env
+.env.local
+.env.production
+firebase_key.json
+firebase-credentials.json
+serviceAccountKey.json
+*_key.json
+
+# ── Python ────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv/
+
+# ── Build & Distribution ─────────────────────────────────────────
+build/
+dist/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ── IDE & Editors ─────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# ── OS Files ──────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.lnk
+
+# ── Testing & Quality ────────────────────────────────────────────
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.tox/
+coverage.xml
+pytest_output.txt
+
+# ── Temporary & Generated ────────────────────────────────────────
+*.log
+temp.txt
+_hashes.txt
+_pages_old/
+
+# ── Streamlit ───────────────────────────────────────────────────
+.streamlit/secrets.toml
+.streamlit/config.toml
+>>>>>>> origin/develop

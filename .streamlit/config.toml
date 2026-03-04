@@ -1,0 +1,14 @@
+[browser]
+gatherUsageStats = false
+
+[runner]
+# Prevents Streamlit from auto-discovering files in pages/ as separate nav pages.
+# We handle all routing manually in app.py.
+fastReruns = true
+
+[theme]
+base = "dark"
+primaryColor = "#2d8cff"
+backgroundColor = "#060e1f"
+secondaryBackgroundColor = "#0d1f3c"
+textColor = "#e8f0fe"

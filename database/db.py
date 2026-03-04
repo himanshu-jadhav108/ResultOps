@@ -4,7 +4,10 @@ Supports both Streamlit Cloud secrets and local firebase_key.json
 """
 
 import os
+<<<<<<< HEAD
 import json
+=======
+>>>>>>> origin/develop
 import logging
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -35,13 +38,22 @@ def _get_credentials():
     """
 
     # ── Try Streamlit secrets first ──────────────────────────────────────────
+<<<<<<< HEAD
     in_streamlit_cloud = os.environ.get("STREAMLIT_SHARING_MODE") or \
                          os.environ.get("IS_STREAMLIT_CLOUD") or \
                          _has_streamlit_secrets()
+=======
+    in_streamlit_cloud = (
+        os.environ.get("STREAMLIT_SHARING_MODE")
+        or os.environ.get("IS_STREAMLIT_CLOUD")
+        or _has_streamlit_secrets()
+    )
+>>>>>>> origin/develop
 
     if in_streamlit_cloud:
         try:
             import streamlit as st
+<<<<<<< HEAD
             firebase_secrets = st.secrets["firebase"]
 
             key_dict = {
@@ -55,6 +67,24 @@ def _get_credentials():
                 "token_uri":                   firebase_secrets["token_uri"],
                 "auth_provider_x509_cert_url": firebase_secrets["auth_provider_x509_cert_url"],
                 "client_x509_cert_url":        firebase_secrets["client_x509_cert_url"],
+=======
+
+            firebase_secrets = st.secrets["firebase"]
+
+            key_dict = {
+                "type": firebase_secrets["type"],
+                "project_id": firebase_secrets["project_id"],
+                "private_key_id": firebase_secrets["private_key_id"],
+                "private_key": firebase_secrets["private_key"].replace("\\n", "\n"),
+                "client_email": firebase_secrets["client_email"],
+                "client_id": firebase_secrets["client_id"],
+                "auth_uri": firebase_secrets["auth_uri"],
+                "token_uri": firebase_secrets["token_uri"],
+                "auth_provider_x509_cert_url": firebase_secrets[
+                    "auth_provider_x509_cert_url"
+                ],
+                "client_x509_cert_url": firebase_secrets["client_x509_cert_url"],
+>>>>>>> origin/develop
             }
 
             logger.info("Firebase: loaded from Streamlit secrets")
@@ -85,6 +115,10 @@ def _has_streamlit_secrets():
     """Check if Streamlit secrets exist and contain [firebase] section."""
     try:
         import streamlit as st
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/develop
         return "firebase" in st.secrets
     except Exception:
         return False
@@ -92,4 +126,14 @@ def _has_streamlit_secrets():
 
 def reset_client():
     global _db
+<<<<<<< HEAD
     _db = None
+=======
+    _db = None
+
+
+# Alias for backward compatibility
+def get_db():
+    """Alias for get_client()."""
+    return get_client()
+>>>>>>> origin/develop
