@@ -96,8 +96,14 @@ class AuthManager:
         st.rerun()
 
     def render_logout_button(self):
-        if self.is_read_authenticated or self.is_write_authenticated or self.is_admin_authenticated:
-            if st.sidebar.button("🚪 Logout", type="secondary", use_container_width=True):
+        if (
+            self.is_read_authenticated
+            or self.is_write_authenticated
+            or self.is_admin_authenticated
+        ):
+            if st.sidebar.button(
+                "🚪 Logout", type="secondary", use_container_width=True
+            ):
                 self.logout()
 
     # ── Gate helpers (render login UI if not authenticated) ────────────────────
@@ -126,7 +132,9 @@ class AuthManager:
             with st.container():
                 st.info("🔐 **WRITE Authentication Required**")
                 st.write("Enter WRITE password to save data to database.")
-                pw = st.text_input("WRITE Password", type="password", key="write_pw_input")
+                pw = st.text_input(
+                    "WRITE Password", type="password", key="write_pw_input"
+                )
                 c1, c2 = st.columns([1, 3])
                 with c1:
                     if st.button("Authenticate", type="primary", key="write_auth_btn"):

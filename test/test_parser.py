@@ -109,7 +109,9 @@ class TestConfidenceCalculator:
                 subjects=[ParsedSubject(code="410241", grade="O", total=80)],
             )
         ]
-        metadata = PDFMetadata(university="SPPU", college="COEP", department="CS", semester=5)
+        metadata = PDFMetadata(
+            university="SPPU", college="COEP", department="CS", semester=5
+        )
         calculator = ParsingConfidenceCalculator()
         score, warnings = calculator.calculate_confidence(students, metadata, "test")
         assert score == 1.0

@@ -39,7 +39,9 @@ def render():
                 d = sem.to_dict()
                 stats["total_pdfs"] += 1
                 dept = d.get("department", "Unknown")
-                stats["department_breakdown"][dept] = stats["department_breakdown"].get(dept, 0) + 1
+                stats["department_breakdown"][dept] = (
+                    stats["department_breakdown"].get(dept, 0) + 1
+                )
                 year = str(d.get("session_year", "Unknown"))
                 if year not in stats["yearly_stats"]:
                     stats["yearly_stats"][year] = {"count": 0, "students": 0}
@@ -67,7 +69,11 @@ def render():
         f"{stats['total_pdfs']} PDFs processed",
     )
     m3.metric("📝 Total Records", f"{stats['total_records']:,}")
-    storage_eff = stats["total_students"] / stats["total_records"] * 100 if stats["total_records"] > 0 else 0
+    storage_eff = (
+        stats["total_students"] / stats["total_records"] * 100
+        if stats["total_records"] > 0
+        else 0
+    )
     m4.metric(
         "💾 Storage Efficiency",
         f"{storage_eff:.1f}%",

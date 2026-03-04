@@ -11,7 +11,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(name)s | %(levelname)s | %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s | %(name)s | %(levelname)s | %(message)s"
+)
 logger = logging.getLogger("resultops")
 
 # ── Must be FIRST Streamlit call ──────────────────────────────────────────────
@@ -61,7 +63,9 @@ with st.sidebar:
             unsafe_allow_html=True,
         )
     else:
-        st.markdown('<div class="sidebar-logo">🎓 ResultOps</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="sidebar-logo">🎓 ResultOps</div>', unsafe_allow_html=True
+        )
         st.markdown(
             '<div class="sidebar-tagline">University Result Processing Platform</div>',
             unsafe_allow_html=True,
@@ -147,7 +151,8 @@ with st.sidebar:
     )
 
     st.markdown(
-        '<div style="text-align:center; font-size:10px; color:#3d5a7a; margin-top:6px;">' "© 2025 ResultOps</div>",
+        '<div style="text-align:center; font-size:10px; color:#3d5a7a; margin-top:6px;">'
+        "© 2025 ResultOps</div>",
         unsafe_allow_html=True,
     )
 

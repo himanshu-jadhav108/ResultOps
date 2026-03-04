@@ -35,7 +35,9 @@ def _build_excel(summary, rank_df, subj_df, dist_df, include, meta_info=None) ->
             cell = ws.cell(1, col)
             cell.fill = HFILL
             cell.font = HFONT
-            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.alignment = Alignment(
+                horizontal="center", vertical="center", wrap_text=True
+            )
             cell.border = BORD
         for r in range(2, ws.max_row + 1):
             for col in range(1, ws.max_column + 1):
@@ -47,7 +49,10 @@ def _build_excel(summary, rank_df, subj_df, dist_df, include, meta_info=None) ->
             ltr = get_column_letter(col_idx)
             mx = max(
                 len(str(col_name)),
-                *[len(str(ws.cell(r, col_idx).value or "")) for r in range(2, ws.max_row + 1)],
+                *[
+                    len(str(ws.cell(r, col_idx).value or ""))
+                    for r in range(2, ws.max_row + 1)
+                ],
                 0,
             )
             ws.column_dimensions[ltr].width = min(mx + 4, 45)
@@ -146,10 +151,14 @@ def render():
     semesters = analytics.get_semesters_for_department(dept_select)
     if semesters:
         sem_labels = {
-            f"Sem {s['semester_number']} — {s.get('session_type','')} {s.get('session_year','')}": s["id"]
+            f"Sem {s['semester_number']} — {s.get('session_type','')} {s.get('session_year','')}": s[
+                "id"
+            ]
             for s in semesters
         }
-        sem_select = f4.selectbox("📋 Semester", list(sem_labels.keys()), key="dash_sem")
+        sem_select = f4.selectbox(
+            "📋 Semester", list(sem_labels.keys()), key="dash_sem"
+        )
         semester_key = sem_labels.get(sem_select)
         sem_label = sem_select
 
@@ -196,7 +205,10 @@ def render():
         # Show which college/dept the report is for
         chosen_uni = uni_select if uni_select != "— All —" else "(All)"
         chosen_col = col_select if col_select != "— All —" else "(All)"
-        st.markdown(f"**Report for:** 🏛️ {chosen_uni} → 🏫 {chosen_col} → " f"📚 {dept_select} → 📋 {sem_label}")
+        st.markdown(
+            f"**Report for:** 🏛️ {chosen_uni} → 🏫 {chosen_col} → "
+            f"📚 {dept_select} → 📋 {sem_label}"
+        )
 
         st.caption("Select which sections to include:")
         dc1, dc2, dc3, dc4 = st.columns(4)
@@ -223,7 +235,9 @@ def render():
             st.warning("Select at least one section to download.")
         else:
             try:
-                excel_bytes = _build_excel(summary, rank_df, subj_df, dist_df, include, meta_info)
+                excel_bytes = _build_excel(
+                    summary, rank_df, subj_df, dist_df, include, meta_info
+                )
                 safe_dept = dept_select.replace(" ", "_")[:20]
                 safe_sem = sem_label.replace(" ", "_").replace("—", "").strip()[:15]
                 st.download_button(
@@ -250,7 +264,11 @@ def render():
         if st.button(
             "📊 Charts Only",
             use_container_width=True,
-            type=("primary" if st.session_state.dash_view_mode == "charts" else "secondary"),
+            type=(
+                "primary"
+                if st.session_state.dash_view_mode == "charts"
+                else "secondary"
+            ),
         ):
             st.session_state.dash_view_mode = "charts"
             st.rerun()
@@ -258,7 +276,11 @@ def render():
         if st.button(
             "📋 Tables Only",
             use_container_width=True,
-            type=("primary" if st.session_state.dash_view_mode == "tables" else "secondary"),
+            type=(
+                "primary"
+                if st.session_state.dash_view_mode == "tables"
+                else "secondary"
+            ),
         ):
             st.session_state.dash_view_mode = "tables"
             st.rerun()
@@ -266,7 +288,9 @@ def render():
         if st.button(
             "📊📋 Both",
             use_container_width=True,
-            type=("primary" if st.session_state.dash_view_mode == "both" else "secondary"),
+            type=(
+                "primary" if st.session_state.dash_view_mode == "both" else "secondary"
+            ),
         ):
             st.session_state.dash_view_mode = "both"
             st.rerun()
@@ -327,7 +351,9 @@ def render():
             if show_charts:
                 st.markdown("#### 📊 Top 10 SGPA")
                 bar_data = top10.set_index("Name")["SGPA"]
-                st.bar_chart(bar_data, color=c["accent"], height=280, use_container_width=True)
+                st.bar_chart(
+                    bar_data, color=c["accent"], height=280, use_container_width=True
+                )
 
         with st.expander("📋 Full Rank List — click to expand"):
 
@@ -389,10 +415,14 @@ def render():
             with ch1:
                 st.markdown("**Pass % by Subject**")
                 pass_chart = subj_df.set_index(subj_code_col)["Pass %"]
-                st.bar_chart(pass_chart, color=c["accent"], height=280, use_container_width=True)
+                st.bar_chart(
+                    pass_chart, color=c["accent"], height=280, use_container_width=True
+                )
             with ch2:
                 st.markdown("**Average Marks by Subject**")
                 avg_chart = subj_df.set_index(subj_code_col)["Average"]
-                st.bar_chart(avg_chart, color="#f5a623", height=280, use_container_width=True)
+                st.bar_chart(
+                    avg_chart, color="#f5a623", height=280, use_container_width=True
+                )
     else:
         st.info("No subject data available.")

@@ -90,7 +90,9 @@ class ParsingConfidenceCalculator:
         if valid_prns == len(students):
             passed_checks += 1
         else:
-            self.warnings.append(f"Invalid PRN format in {len(students) - valid_prns} students")
+            self.warnings.append(
+                f"Invalid PRN format in {len(students) - valid_prns} students"
+            )
 
         # Check 3: SGPA consistency (20%)
         total_checks += 1
@@ -98,7 +100,9 @@ class ParsingConfidenceCalculator:
         if valid_sgpa == len(students):
             passed_checks += 1
         else:
-            self.warnings.append(f"SGPA out of range for {len(students) - valid_sgpa} students")
+            self.warnings.append(
+                f"SGPA out of range for {len(students) - valid_sgpa} students"
+            )
 
         # Check 4: Subject count consistency (20%)
         total_checks += 1
@@ -111,7 +115,10 @@ class ParsingConfidenceCalculator:
         # Check 5: Grade validity (20%)
         total_checks += 1
         valid_grades = all(
-            all(sub.grade in ["O", "A", "B", "C", "D", "E", "F", "P", "PP", "NP", None] for sub in s.subjects)
+            all(
+                sub.grade in ["O", "A", "B", "C", "D", "E", "F", "P", "PP", "NP", None]
+                for sub in s.subjects
+            )
             for s in students
         )
         if valid_grades:
@@ -186,9 +193,7 @@ class StudentBlockParser:
     CREDITS_PATTERN = r"Credits\s*Earned/Total\s*:\s*(\d+)/(\d+)"
 
     # Subject line pattern
-    SUBJECT_PATTERN = (
-        r"(\d{6})\s+(\d+|--)\s+(\d+|--)\s+(\d+|--)?\s+(\d+|--)?\s+(\d+|--)\s+(\d)\s+([A-Z]+)\s+(\d+|--)\s+(\d+)"
-    )
+    SUBJECT_PATTERN = r"(\d{6})\s+(\d+|--)\s+(\d+|--)\s+(\d+|--)?\s+(\d+|--)?\s+(\d+|--)\s+(\d)\s+([A-Z]+)\s+(\d+|--)\s+(\d+)"
 
     def split_student_blocks(self, text: str) -> List[str]:
         """Split text into individual student blocks."""
@@ -276,7 +281,9 @@ class StudentBlockParser:
                     code=groups[0],
                     internal=int(groups[1]) if groups[1] != "--" else None,
                     external=int(groups[2]) if groups[2] != "--" else None,
-                    practical=(int(groups[3]) if groups[3] and groups[3] != "--" else None),
+                    practical=(
+                        int(groups[3]) if groups[3] and groups[3] != "--" else None
+                    ),
                     oral=int(groups[4]) if groups[4] and groups[4] != "--" else None,
                     total=int(groups[5]) if groups[5] != "--" else None,
                     credits=int(groups[6]) if groups[6] else None,
@@ -334,7 +341,9 @@ class ResultParser:
                 students.append(student)
 
         # Calculate confidence
-        confidence, warnings = self.confidence_calculator.calculate_confidence(students, metadata, raw_text)
+        confidence, warnings = self.confidence_calculator.calculate_confidence(
+            students, metadata, raw_text
+        )
 
         return metadata, students, confidence, warnings, raw_text
 

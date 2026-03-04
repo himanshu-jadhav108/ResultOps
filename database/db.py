@@ -35,7 +35,9 @@ def _get_credentials():
 
     # ── Try Streamlit secrets first ──────────────────────────────────────────
     in_streamlit_cloud = (
-        os.environ.get("STREAMLIT_SHARING_MODE") or os.environ.get("IS_STREAMLIT_CLOUD") or _has_streamlit_secrets()
+        os.environ.get("STREAMLIT_SHARING_MODE")
+        or os.environ.get("IS_STREAMLIT_CLOUD")
+        or _has_streamlit_secrets()
     )
 
     if in_streamlit_cloud:
@@ -53,7 +55,9 @@ def _get_credentials():
                 "client_id": firebase_secrets["client_id"],
                 "auth_uri": firebase_secrets["auth_uri"],
                 "token_uri": firebase_secrets["token_uri"],
-                "auth_provider_x509_cert_url": firebase_secrets["auth_provider_x509_cert_url"],
+                "auth_provider_x509_cert_url": firebase_secrets[
+                    "auth_provider_x509_cert_url"
+                ],
                 "client_x509_cert_url": firebase_secrets["client_x509_cert_url"],
             }
 

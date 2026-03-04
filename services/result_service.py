@@ -31,7 +31,9 @@ class ResultService:
     def __init__(self):
         self.db = get_client()
 
-    def save_results(self, metadata: PDFMetadata, students: list[StudentRecord]) -> dict:
+    def save_results(
+        self, metadata: PDFMetadata, students: list[StudentRecord]
+    ) -> dict:
         """
         Save all parsed results to Firestore.
 
