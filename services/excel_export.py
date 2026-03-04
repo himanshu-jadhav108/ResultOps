@@ -5,11 +5,7 @@ Generates multi-sheet Excel workbooks for result reports.
 
 import io
 import logging
-<<<<<<< HEAD
-from typing import Optional
-=======
 
->>>>>>> origin/develop
 
 import pandas as pd
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
@@ -19,22 +15,12 @@ from analytics.analytics import Analytics
 
 logger = logging.getLogger(__name__)
 
-<<<<<<< HEAD
-_HEADER_FILL  = PatternFill("solid", fgColor="1F4E79")
-_ALT_FILL     = PatternFill("solid", fgColor="D6E4F7")
-_HEADER_FONT  = Font(bold=True, color="FFFFFF", size=11)
-_BORDER_SIDE  = Side(style="thin", color="AAAAAA")
-_CELL_BORDER  = Border(
-    left=_BORDER_SIDE, right=_BORDER_SIDE,
-    top=_BORDER_SIDE, bottom=_BORDER_SIDE
-=======
 _HEADER_FILL = PatternFill("solid", fgColor="1F4E79")
 _ALT_FILL = PatternFill("solid", fgColor="D6E4F7")
 _HEADER_FONT = Font(bold=True, color="FFFFFF", size=11)
 _BORDER_SIDE = Side(style="thin", color="AAAAAA")
 _CELL_BORDER = Border(
     left=_BORDER_SIDE, right=_BORDER_SIDE, top=_BORDER_SIDE, bottom=_BORDER_SIDE
->>>>>>> origin/develop
 )
 
 
@@ -44,23 +30,15 @@ class ExcelExportService:
     def __init__(self):
         self.analytics = Analytics()
 
-<<<<<<< HEAD
-    def generate_excel(self, semester_id: str, title: str = "ResultOps Report") -> bytes:
-=======
     def generate_excel(
         self, semester_id: str, title: str = "ResultOps Report"
     ) -> bytes:
->>>>>>> origin/develop
         """
         Generate a complete Excel workbook with:
         - Rank List sheet
         - Subject Analytics sheet
         - SGPA Distribution sheet
-<<<<<<< HEAD
-        
-=======
 
->>>>>>> origin/develop
         Returns:
             Raw bytes of the .xlsx file.
         """
@@ -103,13 +81,8 @@ def _style_sheet(ws, df: pd.DataFrame) -> None:
     # Style header row
     for col_num, col_name in enumerate(df.columns, start=1):
         cell = ws.cell(row=1, column=col_num)
-<<<<<<< HEAD
-        cell.fill   = _HEADER_FILL
-        cell.font   = _HEADER_FONT
-=======
         cell.fill = _HEADER_FILL
         cell.font = _HEADER_FONT
->>>>>>> origin/develop
         cell.alignment = Alignment(horizontal="center", vertical="center")
         cell.border = _CELL_BORDER
 
@@ -118,11 +91,7 @@ def _style_sheet(ws, df: pd.DataFrame) -> None:
         fill = _ALT_FILL if row_num % 2 == 0 else PatternFill()
         for col_num in range(1, ws.max_column + 1):
             cell = ws.cell(row=row_num, column=col_num)
-<<<<<<< HEAD
-            cell.fill   = fill
-=======
             cell.fill = fill
->>>>>>> origin/develop
             cell.border = _CELL_BORDER
             cell.alignment = Alignment(horizontal="left", vertical="center")
 
@@ -131,12 +100,6 @@ def _style_sheet(ws, df: pd.DataFrame) -> None:
         col_letter = get_column_letter(col_num)
         max_len = max(
             len(str(col_name)),
-<<<<<<< HEAD
-            *[len(str(ws.cell(row=r, column=col_num).value or "")) for r in range(2, ws.max_row + 1)],
-            0
-        )
-        ws.column_dimensions[col_letter].width = min(max_len + 4, 40)
-=======
             *[
                 len(str(ws.cell(row=r, column=col_num).value or ""))
                 for r in range(2, ws.max_row + 1)
@@ -239,4 +202,3 @@ def generate_excel(metadata, students) -> bytes:
 
     output.seek(0)
     return output.read()
->>>>>>> origin/develop

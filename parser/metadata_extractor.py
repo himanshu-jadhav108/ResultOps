@@ -23,11 +23,7 @@ class PDFMetadata:
     college_name: str
     department_name: str
     semester_number: int
-<<<<<<< HEAD
-    session_type: str   # 'Winter' or 'Summer'
-=======
     session_type: str  # 'Winter' or 'Summer'
->>>>>>> origin/develop
     session_year: int
 
 
@@ -35,11 +31,7 @@ def extract_metadata(full_text: str) -> PDFMetadata:
     lines = [line.strip() for line in full_text.splitlines() if line.strip()]
 
     university_name = _extract_university(lines)
-<<<<<<< HEAD
-    college_name    = _extract_college(full_text)
-=======
     college_name = _extract_college(full_text)
->>>>>>> origin/develop
     department_name = _extract_department(full_text)
     session_type, session_year = _extract_session(full_text)
     semester_number = _extract_semester_number(full_text)
@@ -62,28 +54,18 @@ def extract_metadata(full_text: str) -> PDFMetadata:
 
 # ── UNIVERSITY ────────────────────────────────────────────────────────────────
 
-<<<<<<< HEAD
-def _extract_university(lines: list[str]) -> str:
-    """First long non-numeric line near the top of the PDF."""
-    for line in lines[:10]:
-        if len(line) > 10 and not re.match(r'^\d+$', line):
-=======
 
 def _extract_university(lines: list[str]) -> str:
     """First long non-numeric line near the top of the PDF."""
     for line in lines[:10]:
         if len(line) > 10 and not re.match(r"^\d+$", line):
->>>>>>> origin/develop
             return line.strip()
     return lines[0] if lines else "Unknown University"
 
 
 # ── COLLEGE ───────────────────────────────────────────────────────────────────
 
-<<<<<<< HEAD
-=======
 
->>>>>>> origin/develop
 def _extract_college(text: str) -> str:
     """
     Handles SPPU ledger format:
@@ -100,32 +82,11 @@ def _extract_college(text: str) -> str:
     """
 
     # Pattern 1: College :[100] JSPM NARHE TECHNICAL CAMPUS, PUNE
-<<<<<<< HEAD
-    match = re.search(
-        r'College\s*:\s*\[\d+\]\s*([^\n]+)',
-        text, re.IGNORECASE
-    )
-=======
     match = re.search(r"College\s*:\s*\[\d+\]\s*([^\n]+)", text, re.IGNORECASE)
->>>>>>> origin/develop
     if match:
         return match.group(1).strip()
 
     # Pattern 2: College : JSPM NARHE TECHNICAL CAMPUS (no bracket)
-<<<<<<< HEAD
-    match = re.search(
-        r'College\s*:\s*([A-Z][^\n]{5,})',
-        text, re.IGNORECASE
-    )
-    if match:
-        name = match.group(1).strip()
-        # Make sure we didn't grab a ledger label like "College Ledger"
-        if not re.match(r'ledger|result|report', name, re.IGNORECASE):
-            return name
-
-    # Pattern 3: Line after PunCode : 100
-    match = re.search(r'PunCode\s*[:\-]?\s*\d+\s*\n(.+)', text, re.IGNORECASE)
-=======
     match = re.search(r"College\s*:\s*([A-Z][^\n]{5,})", text, re.IGNORECASE)
     if match:
         name = match.group(1).strip()
@@ -135,30 +96,20 @@ def _extract_college(text: str) -> str:
 
     # Pattern 3: Line after PunCode : 100
     match = re.search(r"PunCode\s*[:\-]?\s*\d+\s*\n(.+)", text, re.IGNORECASE)
->>>>>>> origin/develop
     if match:
         return match.group(1).strip()
 
     # Pattern 4: Line with Campus / Institute keyword (not "Engineering" which catches dept)
     match = re.search(
-<<<<<<< HEAD
-        r'([A-Z][^\n]{5,80}(?:Campus|Institute|Polytechnic|Technology|University)[^\n]*)',
-        text, re.IGNORECASE
-=======
         r"([A-Z][^\n]{5,80}(?:Campus|Institute|Polytechnic|Technology|University)[^\n]*)",
         text,
         re.IGNORECASE,
->>>>>>> origin/develop
     )
     if match:
         return match.group(1).strip()
 
     # Fallback: second non-empty line
-<<<<<<< HEAD
-    lines = [l.strip() for l in text.splitlines() if l.strip()]
-=======
     lines = [line.strip() for line in text.splitlines() if line.strip()]
->>>>>>> origin/develop
     if len(lines) > 1:
         return lines[1]
 
@@ -167,10 +118,7 @@ def _extract_college(text: str) -> str:
 
 # ── DEPARTMENT ────────────────────────────────────────────────────────────────
 
-<<<<<<< HEAD
-=======
 
->>>>>>> origin/develop
 def _extract_department(text: str) -> str:
     """
     Extracts from 'Branch : <name>' or 'Department : <name>' pattern.
@@ -179,44 +127,26 @@ def _extract_department(text: str) -> str:
 
     # Pattern: Branch :[66] ARTIFICIAL INTELLIGENCE AND DATA SCIENCE
     match = re.search(
-<<<<<<< HEAD
-        r'(?:Branch|Department)\s*:\s*\[\d+\]\s*([^\n]+)',
-        text, re.IGNORECASE
-=======
         r"(?:Branch|Department)\s*:\s*\[\d+\]\s*([^\n]+)", text, re.IGNORECASE
->>>>>>> origin/develop
     )
     if match:
         return match.group(1).strip()
 
     # Pattern: Branch : ARTIFICIAL INTELLIGENCE AND DATA SCIENCE
     match = re.search(
-<<<<<<< HEAD
-        r'(?:Branch|Department)\s*[:\-]\s*([^\n]{3,})',
-        text, re.IGNORECASE
-=======
         r"(?:Branch|Department)\s*[:\-]\s*([^\n]{3,})", text, re.IGNORECASE
->>>>>>> origin/develop
     )
     if match:
         return match.group(1).strip()
 
     # Fallback: known branch name patterns
     match = re.search(
-<<<<<<< HEAD
-        r'(Computer Engineering|Information Technology|Electronics|'
-        r'Mechanical|Civil|Electrical|E&TC|Chemical|'
-        r'Artificial Intelligence|Data Science|AIDS|AIML|'
-        r'Computer Science)[^\n]*',
-        text, re.IGNORECASE
-=======
         r"(Computer Engineering|Information Technology|Electronics|"
         r"Mechanical|Civil|Electrical|E&TC|Chemical|"
         r"Artificial Intelligence|Data Science|AIDS|AIML|"
         r"Computer Science)[^\n]*",
         text,
         re.IGNORECASE,
->>>>>>> origin/develop
     )
     if match:
         return match.group(1).strip()
@@ -226,45 +156,26 @@ def _extract_department(text: str) -> str:
 
 # ── SESSION ───────────────────────────────────────────────────────────────────
 
-<<<<<<< HEAD
-def _extract_session(text: str) -> tuple[str, int]:
-    """Extract Winter/Summer and year from session markers in PDF."""
-
-    match = re.search(
-        r'(Winter|Summer)\s+Session\s+(\d{4})',
-        text, re.IGNORECASE
-    )
-=======
 
 def _extract_session(text: str) -> tuple[str, int]:
     """Extract Winter/Summer and year from session markers in PDF."""
 
     match = re.search(r"(Winter|Summer)\s+Session\s+(\d{4})", text, re.IGNORECASE)
->>>>>>> origin/develop
     if match:
         return match.group(1).capitalize(), int(match.group(2))
 
     # Fallback: find year
-<<<<<<< HEAD
-    year_match = re.search(r'\b(20\d{2})\b', text)
-    year = int(year_match.group(1)) if year_match else 2025
-    session = "Winter" if re.search(r'winter|nov|dec|jan', text, re.IGNORECASE) else "Summer"
-=======
     year_match = re.search(r"\b(20\d{2})\b", text)
     year = int(year_match.group(1)) if year_match else 2025
     session = (
         "Winter" if re.search(r"winter|nov|dec|jan", text, re.IGNORECASE) else "Summer"
     )
->>>>>>> origin/develop
     return session, year
 
 
 # ── SEMESTER ──────────────────────────────────────────────────────────────────
 
-<<<<<<< HEAD
-=======
 
->>>>>>> origin/develop
 def _extract_semester_number(text: str) -> int:
     """
     FIX: Previously picked up semester from page header/title which could be wrong
@@ -281,14 +192,7 @@ def _extract_semester_number(text: str) -> int:
 
     # Strategy 1: collect all SEMESTER: N from student blocks
     # Student blocks have pattern like: SEMESTER: 5  (standalone line)
-<<<<<<< HEAD
-    all_matches = re.findall(
-        r'SEMESTER\s*[:\-]?\s*(\d+)',
-        text, re.IGNORECASE
-    )
-=======
     all_matches = re.findall(r"SEMESTER\s*[:\-]?\s*(\d+)", text, re.IGNORECASE)
->>>>>>> origin/develop
 
     if all_matches:
         counts = Counter(int(m) for m in all_matches)
@@ -298,19 +202,9 @@ def _extract_semester_number(text: str) -> int:
         return most_common
 
     # Strategy 2: Roman numerals (Sem-V, SEM IV etc.) — header fallback
-<<<<<<< HEAD
-    roman = {
-        'I': 1, 'II': 2, 'III': 3, 'IV': 4,
-        'V': 5, 'VI': 6, 'VII': 7, 'VIII': 8
-    }
-    match = re.search(
-        r'Sem(?:ester)?\s*[-]?\s*(VIII|VII|VI|IV|V|III|II|I)\b',
-        text, re.IGNORECASE
-=======
     roman = {"I": 1, "II": 2, "III": 3, "IV": 4, "V": 5, "VI": 6, "VII": 7, "VIII": 8}
     match = re.search(
         r"Sem(?:ester)?\s*[-]?\s*(VIII|VII|VI|IV|V|III|II|I)\b", text, re.IGNORECASE
->>>>>>> origin/develop
     )
     if match:
         val = match.group(1).upper()
@@ -319,8 +213,4 @@ def _extract_semester_number(text: str) -> int:
     raise ValueError(
         "Could not detect semester number from PDF.\n"
         "Make sure the PDF contains 'SEMESTER: N' in student records."
-<<<<<<< HEAD
     )
-=======
-    )
->>>>>>> origin/develop

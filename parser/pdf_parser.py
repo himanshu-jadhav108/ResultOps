@@ -5,11 +5,7 @@ Extracts raw text from text-based university ledger PDFs using pdfplumber.
 
 import logging
 from pathlib import Path
-<<<<<<< HEAD
-from typing import Union
-=======
 from typing import Any, Union
->>>>>>> origin/develop
 
 import pdfplumber
 
@@ -19,15 +15,6 @@ logger = logging.getLogger(__name__)
 def extract_text_from_pdf(source: Union[str, Path, bytes]) -> str:
     """
     Extract full text from a text-based PDF ledger.
-<<<<<<< HEAD
-    
-    Args:
-        source: File path (str/Path) or raw bytes (from Streamlit upload).
-    
-    Returns:
-        Concatenated text from all pages.
-    
-=======
 
     Args:
         source: File path (str/Path) or raw bytes (from Streamlit upload).
@@ -35,7 +22,6 @@ def extract_text_from_pdf(source: Union[str, Path, bytes]) -> str:
     Returns:
         Concatenated text from all pages.
 
->>>>>>> origin/develop
     Raises:
         ValueError: If the PDF is empty or contains no extractable text.
         RuntimeError: If pdfplumber fails to open the file.
@@ -43,14 +29,9 @@ def extract_text_from_pdf(source: Union[str, Path, bytes]) -> str:
     import io
 
     try:
-<<<<<<< HEAD
-        if isinstance(source, (str, Path)):
-            pdf_file = open(source, 'rb')
-=======
         pdf_file: Any
         if isinstance(source, (str, Path)):
             pdf_file = open(source, "rb")
->>>>>>> origin/develop
         else:
             # Assume bytes (from st.file_uploader)
             pdf_file = io.BytesIO(source)
@@ -75,13 +56,6 @@ def extract_text_from_pdf(source: Union[str, Path, bytes]) -> str:
                 "ResultOps requires text-based PDFs."
             )
 
-<<<<<<< HEAD
-        logger.info(f"Extracted {len(full_text)} characters from {len(pages_text)} pages.")
-        return full_text
-
-    except pdfplumber.utils.exceptions.PDFSyntaxError as e:
-        raise RuntimeError(f"PDF is corrupted or not a valid PDF file: {e}") from e
-=======
         logger.info(
             f"Extracted {len(full_text)} characters from {len(pages_text)} pages."
         )
@@ -91,4 +65,3 @@ def extract_text_from_pdf(source: Union[str, Path, bytes]) -> str:
         if "PDFSyntax" in type(e).__name__ or "pdf" in str(e).lower():
             raise RuntimeError(f"PDF is corrupted or not a valid PDF file: {e}") from e
         raise
->>>>>>> origin/develop
