@@ -113,8 +113,12 @@ class AuthManager:
         if show_ui:
             st.markdown("## 🔐 Protected Area")
             st.warning("This section requires **READ** authentication.")
-            pw = st.text_input("READ Password", type="password", key="read_pw_input")
-            if st.button("Authenticate", type="primary", key="read_auth_btn"):
+            with st.form("read_auth_form"):
+                pw = st.text_input(
+                    "READ Password", type="password", key="read_pw_input"
+                )
+                submitted = st.form_submit_button("Authenticate", type="primary")
+            if submitted:
                 if self.authenticate_read(pw):
                     st.success("✅ READ access granted!")
                     st.rerun()
@@ -132,17 +136,17 @@ class AuthManager:
             with st.container():
                 st.info("🔐 **WRITE Authentication Required**")
                 st.write("Enter WRITE password to save data to database.")
-                pw = st.text_input(
-                    "WRITE Password", type="password", key="write_pw_input"
-                )
-                c1, c2 = st.columns([1, 3])
-                with c1:
-                    if st.button("Authenticate", type="primary", key="write_auth_btn"):
-                        if self.authenticate_write(pw):
-                            st.success("✅ WRITE access granted!")
-                            st.rerun()
-                        else:
-                            st.error("❌ Invalid password")
+                with st.form("write_auth_form"):
+                    pw = st.text_input(
+                        "WRITE Password", type="password", key="write_pw_input"
+                    )
+                    submitted = st.form_submit_button("Authenticate", type="primary")
+                if submitted:
+                    if self.authenticate_write(pw):
+                        st.success("✅ WRITE access granted!")
+                        st.rerun()
+                    else:
+                        st.error("❌ Invalid password")
         return False
 
     def require_admin_auth(self, show_ui: bool = True) -> bool:
@@ -152,8 +156,14 @@ class AuthManager:
         if show_ui:
             st.markdown("## 🔒 Admin Access Required")
             st.warning("This section requires **ADMIN** authentication.")
-            pw = st.text_input("Admin Password", type="password", key="admin_pw_input")
-            if st.button("Authenticate as Admin", type="primary", key="admin_auth_btn"):
+            with st.form("admin_auth_form"):
+                pw = st.text_input(
+                    "Admin Password", type="password", key="admin_pw_input"
+                )
+                submitted = st.form_submit_button(
+                    "Authenticate as Admin", type="primary"
+                )
+            if submitted:
                 if self.authenticate_admin(pw):
                     st.success("✅ Admin access granted!")
                     st.rerun()
