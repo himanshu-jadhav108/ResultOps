@@ -87,6 +87,5 @@ _pages_old/
 
 # ── Streamlit ───────────────────────────────────────────────────
 .streamlit/secrets.toml
-.streamlit/config.toml
 
 .devcontainer/devcontainer.json
