@@ -179,7 +179,6 @@ class TestRankCalculation:
         assert students[2]["rank"] == 3
 
 
-
 # Integration tests
 @pytest.mark.integration
 class TestFullParsing:
