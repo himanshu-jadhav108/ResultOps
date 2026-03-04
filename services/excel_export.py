@@ -5,7 +5,7 @@ Generates multi-sheet Excel workbooks for result reports.
 
 import io
 import logging
-from typing import Optional
+
 
 import pandas as pd
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
@@ -19,9 +19,7 @@ _HEADER_FILL = PatternFill("solid", fgColor="1F4E79")
 _ALT_FILL = PatternFill("solid", fgColor="D6E4F7")
 _HEADER_FONT = Font(bold=True, color="FFFFFF", size=11)
 _BORDER_SIDE = Side(style="thin", color="AAAAAA")
-_CELL_BORDER = Border(
-    left=_BORDER_SIDE, right=_BORDER_SIDE, top=_BORDER_SIDE, bottom=_BORDER_SIDE
-)
+_CELL_BORDER = Border(left=_BORDER_SIDE, right=_BORDER_SIDE, top=_BORDER_SIDE, bottom=_BORDER_SIDE)
 
 
 class ExcelExportService:
@@ -30,9 +28,7 @@ class ExcelExportService:
     def __init__(self):
         self.analytics = Analytics()
 
-    def generate_excel(
-        self, semester_id: str, title: str = "ResultOps Report"
-    ) -> bytes:
+    def generate_excel(self, semester_id: str, title: str = "ResultOps Report") -> bytes:
         """
         Generate a complete Excel workbook with:
         - Rank List sheet
@@ -66,9 +62,7 @@ class ExcelExportService:
             # Sheet 4: Summary
             summary = self.analytics.semester_summary(semester_id)
             if summary:
-                summary_df = pd.DataFrame(
-                    list(summary.items()), columns=["Metric", "Value"]
-                )
+                summary_df = pd.DataFrame(list(summary.items()), columns=["Metric", "Value"])
                 summary_df.to_excel(writer, sheet_name="Summary", index=False)
                 _style_sheet(writer.sheets["Summary"], summary_df)
 
@@ -100,10 +94,7 @@ def _style_sheet(ws, df: pd.DataFrame) -> None:
         col_letter = get_column_letter(col_num)
         max_len = max(
             len(str(col_name)),
-            *[
-                len(str(ws.cell(row=r, column=col_num).value or ""))
-                for r in range(2, ws.max_row + 1)
-            ],
+            *[len(str(ws.cell(row=r, column=col_num).value or "")) for r in range(2, ws.max_row + 1)],
             0
         )
         ws.column_dimensions[col_letter].width = min(max_len + 4, 40)
@@ -122,9 +113,7 @@ def generate_excel(metadata, students) -> bytes:
 
     # ── Build student summary DataFrame ─────────────────────────────────────
     student_rows = []
-    for rank, s in enumerate(
-        sorted(students, key=lambda x: (x.sgpa or 0), reverse=True), start=1
-    ):
+    for rank, s in enumerate(sorted(students, key=lambda x: (x.sgpa or 0), reverse=True), start=1):
         student_rows.append(
             {
                 "Rank": rank,
@@ -181,9 +170,7 @@ def generate_excel(metadata, students) -> bytes:
         "Min SGPA": min(sgpas, default=0),
         "Pass Count": statuses.count("PASS"),
         "Fail Count": statuses.count("FAIL"),
-        "Pass %": (
-            round(statuses.count("PASS") / len(statuses) * 100, 1) if statuses else 0
-        ),
+        "Pass %": (round(statuses.count("PASS") / len(statuses) * 100, 1) if statuses else 0),
     }
     summary_df = pd.DataFrame(list(summary_data.items()), columns=["Metric", "Value"])
 

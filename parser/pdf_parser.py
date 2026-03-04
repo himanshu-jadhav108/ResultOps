@@ -55,9 +55,7 @@ def extract_text_from_pdf(source: Union[str, Path, bytes]) -> str:
                 "ResultOps requires text-based PDFs."
             )
 
-        logger.info(
-            f"Extracted {len(full_text)} characters from {len(pages_text)} pages."
-        )
+        logger.info(f"Extracted {len(full_text)} characters from {len(pages_text)} pages.")
         return full_text
 
     except pdfplumber.utils.exceptions.PDFSyntaxError as e:

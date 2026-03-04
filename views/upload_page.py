@@ -39,23 +39,18 @@ def _excel_filename(metadata):
 
 
 def _generate_excel(metadata, students) -> bytes:
-    c = theme_manager.colors
     HEADER_FILL = PatternFill("solid", fgColor="1F4E79")
     ALT_FILL = PatternFill("solid", fgColor="EBF2FF")
     HEADER_FONT = Font(bold=True, color="FFFFFF", size=11)
     BORDER_SIDE = Side(style="thin", color="C5D5EA")
-    CELL_BORDER = Border(
-        left=BORDER_SIDE, right=BORDER_SIDE, top=BORDER_SIDE, bottom=BORDER_SIDE
-    )
+    CELL_BORDER = Border(left=BORDER_SIDE, right=BORDER_SIDE, top=BORDER_SIDE, bottom=BORDER_SIDE)
 
     def style_ws(ws, df):
         for col_num in range(1, len(df.columns) + 1):
             cell = ws.cell(row=1, column=col_num)
             cell.fill = HEADER_FILL
             cell.font = HEADER_FONT
-            cell.alignment = Alignment(
-                horizontal="center", vertical="center", wrap_text=True
-            )
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
             cell.border = CELL_BORDER
         for row_num in range(2, ws.max_row + 1):
             fill = ALT_FILL if row_num % 2 == 0 else PatternFill()
@@ -68,10 +63,7 @@ def _generate_excel(metadata, students) -> bytes:
             col_letter = get_column_letter(col_num)
             max_len = max(
                 len(str(col_name)),
-                *[
-                    len(str(ws.cell(row=r, column=col_num).value or ""))
-                    for r in range(2, ws.max_row + 1)
-                ],
+                *[len(str(ws.cell(row=r, column=col_num).value or "")) for r in range(2, ws.max_row + 1)],
                 0,
             )
             ws.column_dimensions[col_letter].width = min(max_len + 4, 45)
@@ -293,9 +285,6 @@ def render():
     st.markdown("<div style='margin-top:16px'></div>", unsafe_allow_html=True)
     st.markdown("---")
 
-    # ── Validation ─────────────────────────────────────────────────────────────
-    from utils.validators import validate_students
-
     st.markdown("### 🧪 Validation Report")
     validation = validate_students(students, expected_semester=metadata.semester_number)
 
@@ -354,9 +343,7 @@ def render():
             }
             for s in students[:15]
         ]
-        st.dataframe(
-            pd.DataFrame(preview_rows), use_container_width=True, hide_index=True
-        )
+        st.dataframe(pd.DataFrame(preview_rows), use_container_width=True, hide_index=True)
         if len(students) > 15:
             st.caption(f"Showing first 15 of {len(students)} students.")
 
@@ -408,9 +395,7 @@ def render():
             use_container_width=True,
         )
     with note_col:
-        st.caption(
-            "Saves all student records to Firebase. Duplicate semester uploads are blocked."
-        )
+        st.caption("Saves all student records to Firebase. Duplicate semester uploads are blocked.")
 
     if save_clicked:
         from services.result_service import ResultService, DuplicateSemesterError

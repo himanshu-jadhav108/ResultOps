@@ -33,9 +33,7 @@ class ValidationReport:
         if self.students_missing_prn:
             lines.append(f"❌ Blocks with Empty PRN: {len(self.students_missing_prn)}")
         if self.semester_inconsistency:
-            lines.append(
-                f"⚠️ Semester number inconsistency detected. Expected: {self.expected_semester}"
-            )
+            lines.append(f"⚠️ Semester number inconsistency detected. Expected: {self.expected_semester}")
         for anomaly in self.anomalies:
             lines.append(f"⚠️ {anomaly}")
         if self.is_valid:
@@ -108,14 +106,8 @@ def validate_students(
     if len(semester_numbers) > 1:
         semester_inconsistency = True
         anomalies.append(f"Multiple semester numbers found: {semester_numbers}")
-    if (
-        expected_semester
-        and semester_numbers
-        and expected_semester not in semester_numbers
-    ):
-        anomalies.append(
-            f"Metadata says semester {expected_semester} but students show {semester_numbers}"
-        )
+    if expected_semester and semester_numbers and expected_semester not in semester_numbers:
+        anomalies.append(f"Metadata says semester {expected_semester} but students show {semester_numbers}")
 
     # Subject count consistency
     if subject_counts:
@@ -123,16 +115,11 @@ def validate_students(
         max_count = max(subject_counts)
         if max_count - min_count > 2:
             anomalies.append(
-                f"Subject count varies widely: min={min_count}, max={max_count}. "
-                f"Check for parsing issues."
+                f"Subject count varies widely: min={min_count}, max={max_count}. " f"Check for parsing issues."
             )
 
     # Determine overall validity
-    is_valid = (
-        len(missing_prn_indices) == 0
-        and not semester_inconsistency
-        and len(students) > 0
-    )
+    is_valid = len(missing_prn_indices) == 0 and not semester_inconsistency and len(students) > 0
 
     return ValidationReport(
         is_valid=is_valid,

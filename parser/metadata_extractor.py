@@ -109,7 +109,7 @@ def _extract_college(text: str) -> str:
         return match.group(1).strip()
 
     # Fallback: second non-empty line
-    lines = [l.strip() for l in text.splitlines() if l.strip()]
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
     if len(lines) > 1:
         return lines[1]
 
@@ -126,16 +126,12 @@ def _extract_department(text: str) -> str:
     """
 
     # Pattern: Branch :[66] ARTIFICIAL INTELLIGENCE AND DATA SCIENCE
-    match = re.search(
-        r"(?:Branch|Department)\s*:\s*\[\d+\]\s*([^\n]+)", text, re.IGNORECASE
-    )
+    match = re.search(r"(?:Branch|Department)\s*:\s*\[\d+\]\s*([^\n]+)", text, re.IGNORECASE)
     if match:
         return match.group(1).strip()
 
     # Pattern: Branch : ARTIFICIAL INTELLIGENCE AND DATA SCIENCE
-    match = re.search(
-        r"(?:Branch|Department)\s*[:\-]\s*([^\n]{3,})", text, re.IGNORECASE
-    )
+    match = re.search(r"(?:Branch|Department)\s*[:\-]\s*([^\n]{3,})", text, re.IGNORECASE)
     if match:
         return match.group(1).strip()
 
@@ -167,9 +163,7 @@ def _extract_session(text: str) -> tuple[str, int]:
     # Fallback: find year
     year_match = re.search(r"\b(20\d{2})\b", text)
     year = int(year_match.group(1)) if year_match else 2025
-    session = (
-        "Winter" if re.search(r"winter|nov|dec|jan", text, re.IGNORECASE) else "Summer"
-    )
+    session = "Winter" if re.search(r"winter|nov|dec|jan", text, re.IGNORECASE) else "Summer"
     return session, year
 
 
@@ -203,14 +197,11 @@ def _extract_semester_number(text: str) -> int:
 
     # Strategy 2: Roman numerals (Sem-V, SEM IV etc.) — header fallback
     roman = {"I": 1, "II": 2, "III": 3, "IV": 4, "V": 5, "VI": 6, "VII": 7, "VIII": 8}
-    match = re.search(
-        r"Sem(?:ester)?\s*[-]?\s*(VIII|VII|VI|IV|V|III|II|I)\b", text, re.IGNORECASE
-    )
+    match = re.search(r"Sem(?:ester)?\s*[-]?\s*(VIII|VII|VI|IV|V|III|II|I)\b", text, re.IGNORECASE)
     if match:
         val = match.group(1).upper()
         return roman.get(val, 1)
 
     raise ValueError(
-        "Could not detect semester number from PDF.\n"
-        "Make sure the PDF contains 'SEMESTER: N' in student records."
+        "Could not detect semester number from PDF.\n" "Make sure the PDF contains 'SEMESTER: N' in student records."
     )

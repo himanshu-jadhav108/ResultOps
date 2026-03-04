@@ -109,9 +109,7 @@ class TestConfidenceCalculator:
                 subjects=[ParsedSubject(code="410241", grade="O", total=80)],
             )
         ]
-        metadata = PDFMetadata(
-            university="SPPU", college="COEP", department="CS", semester=5
-        )
+        metadata = PDFMetadata(university="SPPU", college="COEP", department="CS", semester=5)
         calculator = ParsingConfidenceCalculator()
         score, warnings = calculator.calculate_confidence(students, metadata, "test")
         assert score == 1.0
@@ -216,7 +214,7 @@ class TestFullParsing:
         SGPA: (SEM-5) 5.20
         """
 
-        parser = ResultParser()
+        # Use individual extractors for testing
         metadata = MetadataExtractor().extract(sample_text)
         blocks = StudentBlockParser().split_student_blocks(sample_text)
         students = [StudentBlockParser().parse_student_block(b) for b in blocks]

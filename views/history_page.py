@@ -64,9 +64,7 @@ def render():
 
     if not auth_manager.is_admin_authenticated:
         st.warning("🔒 Admin authentication required to delete records.")
-        admin_pw = st.text_input(
-            "🔐 Admin Password", type="password", key="hist_admin_pw"
-        )
+        admin_pw = st.text_input("🔐 Admin Password", type="password", key="hist_admin_pw")
         if st.button("Authenticate as Admin", type="primary", key="hist_admin_btn"):
             if auth_manager.authenticate_admin(admin_pw):
                 st.success("✅ Admin access granted!")

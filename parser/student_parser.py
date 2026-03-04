@@ -44,9 +44,7 @@ _NAME_PATTERN = re.compile(r"NAME\s*[:\-]?\s*([^\n]+?)(?:\s+Mother|$)", re.IGNOR
 _MOTHER_PATTERN = re.compile(r"Mother'?s?\s+Name\s*[:\-]+\s*([^\n]+)", re.IGNORECASE)
 _SEM_PATTERN = re.compile(r"SEMESTER\s*[:\-]?\s*(\d+)", re.IGNORECASE)
 _SGPA_PATTERN = re.compile(r"SGPA\s*[:\-]?\s*(?:\(\w+\))?\s*([0-9.]+)", re.IGNORECASE)
-_CREDITS_PATTERN = re.compile(
-    r"Credits?\s+Earned\s*/\s*Total\s*[:\-]?\s*(\d+)\s*/\s*(\d+)", re.IGNORECASE
-)
+_CREDITS_PATTERN = re.compile(r"Credits?\s+Earned\s*/\s*Total\s*[:\-]?\s*(\d+)\s*/\s*(\d+)", re.IGNORECASE)
 
 # Subject line: starts with digits and uppercase letters (e.g. 410241, CS101, 22510)
 _SUBJECT_LINE_PATTERN = re.compile(r"^\d{4,}[A-Z0-9_]*\b")
@@ -91,7 +89,7 @@ def parse_students(full_text: str) -> list[StudentRecord]:
 
 def _parse_student_block(block: str) -> Optional[StudentRecord]:
     """Parse a single student text block into a StudentRecord."""
-    lines = [l.strip() for l in block.splitlines() if l.strip()]
+    lines = [line.strip() for line in block.splitlines() if line.strip()]
 
     # Extract header fields
     prn = _search(block, _PRN_PATTERN)
@@ -182,11 +180,7 @@ def _parse_subject_lines(lines: list[str]) -> list[SubjectResult]:
                 # Name components generically if we don't know headers
                 component_labels = ["ESE", "ISE", "TW", "PR", "OR"]
                 for idx, val in enumerate(component_nums):
-                    label = (
-                        component_labels[idx]
-                        if idx < len(component_labels)
-                        else f"C{idx+1}"
-                    )
+                    label = component_labels[idx] if idx < len(component_labels) else f"C{idx+1}"
                     components[label] = val
 
         subjects.append(

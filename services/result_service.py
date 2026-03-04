@@ -5,7 +5,7 @@ Handles all database write operations using Firestore collections.
 
 import logging
 from datetime import datetime, timezone
-from typing import Optional
+
 
 from database.db import get_client
 from parser.metadata_extractor import PDFMetadata
@@ -31,9 +31,7 @@ class ResultService:
     def __init__(self):
         self.db = get_client()
 
-    def save_results(
-        self, metadata: PDFMetadata, students: list[StudentRecord]
-    ) -> dict:
+    def save_results(self, metadata: PDFMetadata, students: list[StudentRecord]) -> dict:
         """
         Save all parsed results to Firestore.
 

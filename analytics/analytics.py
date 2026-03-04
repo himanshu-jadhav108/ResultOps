@@ -5,9 +5,8 @@ semester comparison, and subject difficulty analysis.
 """
 
 import logging
-import re
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 
 import pandas as pd
@@ -102,11 +101,7 @@ class Analytics:
         return [{"id": n, "name": n} for n in names]
 
     def get_semesters_for_department(self, department: str) -> list[dict]:
-        docs = (
-            self.db.collection("semesters")
-            .where("department", "==", department)
-            .stream()
-        )
+        docs = self.db.collection("semesters").where("department", "==", department).stream()
         results = []
         for d in docs:
             data = d.to_dict()
@@ -125,11 +120,7 @@ class Analytics:
     # ------------------------------------------------------------------
 
     def _get_results(self, semester_key: str) -> list[dict]:
-        docs = (
-            self.db.collection("results")
-            .where("semester_key", "==", semester_key)
-            .stream()
-        )
+        docs = self.db.collection("results").where("semester_key", "==", semester_key).stream()
         return [d.to_dict() for d in docs]
 
     # ------------------------------------------------------------------
@@ -152,9 +143,7 @@ class Analytics:
             "first_class": sum(1 for s in sgpas if 6.75 <= s < 7.75),
             "pass_count": pass_c,
             "fail_count": len(records) - pass_c,
-            "pass_percentage": (
-                round(pass_c / len(statuses) * 100, 1) if statuses else 0
-            ),
+            "pass_percentage": (round(pass_c / len(statuses) * 100, 1) if statuses else 0),
         }
 
     def student_rank_list(self, semester_key: str) -> pd.DataFrame:
@@ -233,11 +222,7 @@ class Analytics:
 
     def list_uploaded_semesters(self) -> pd.DataFrame:
         try:
-            docs = (
-                self.db.collection("semesters")
-                .order_by("created_at", direction="DESCENDING")
-                .stream()
-            )
+            docs = self.db.collection("semesters").order_by("created_at", direction="DESCENDING").stream()
         except Exception:
             docs = self.db.collection("semesters").stream()
 
@@ -260,11 +245,7 @@ class Analytics:
 
     def delete_semester(self, semester_key: str) -> int:
         """Delete semester + all its result docs. Returns count of deleted results."""
-        docs = (
-            self.db.collection("results")
-            .where("semester_key", "==", semester_key)
-            .stream()
-        )
+        docs = self.db.collection("results").where("semester_key", "==", semester_key).stream()
         batch = self.db.batch()
         count = 0
         total_deleted = 0
@@ -280,9 +261,7 @@ class Analytics:
             batch.commit()
 
         self.db.collection("semesters").document(semester_key).delete()
-        logger.info(
-            f"Deleted semester {semester_key}: {total_deleted} result docs removed"
-        )
+        logger.info(f"Deleted semester {semester_key}: {total_deleted} result docs removed")
         return total_deleted
 
     # ------------------------------------------------------------------
@@ -302,9 +281,12 @@ class Analytics:
             # Get semester metadata
             doc = self.db.collection("semesters").document(key).get()
             meta = doc.to_dict() if doc.exists else {}
+            sem_num = meta.get("semester_number", "")
+            sess_type = meta.get("session_type", "")
+            sess_year = meta.get("session_year", "")
             rows.append(
                 {
-                    "Semester": f"Sem {meta.get('semester_number','')} {meta.get('session_type','')} {meta.get('session_year','')}",
+                    "Semester": f"Sem {sem_num} {sess_type} {sess_year}",
                     "Students": summary["total_students"],
                     "Avg SGPA": summary["avg_sgpa"],
                     "Max SGPA": summary["max_sgpa"],
@@ -335,12 +317,8 @@ class Analytics:
 
         return {
             "sgpa_trend": trend,
-            "best_semester": comparison_df.loc[
-                comparison_df["Avg SGPA"].idxmax(), "Semester"
-            ],
-            "worst_semester": comparison_df.loc[
-                comparison_df["Avg SGPA"].idxmin(), "Semester"
-            ],
+            "best_semester": comparison_df.loc[comparison_df["Avg SGPA"].idxmax(), "Semester"],
+            "worst_semester": comparison_df.loc[comparison_df["Avg SGPA"].idxmin(), "Semester"],
             "change_per_sem": round(change / len(comparison_df), 2),
         }
 

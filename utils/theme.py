@@ -360,8 +360,13 @@ h2, h3 {{ color: {c['text_sub']} !important; font-weight: 600 !important; }}
     border-radius: 12px;
     padding: 16px 18px;
 }}
-[data-testid="stMetricLabel"] span {{ color: {c['metric_label']} !important; font-size: 12px !important; }}
-[data-testid="stMetricValue"] span {{ color: {c['metric_value']} !important; font-weight: 700 !important; font-size: 22px !important; }}
+[data-testid="stMetricLabel"] span {{
+    color: {c['metric_label']} !important; font-size: 12px !important;
+}}
+[data-testid="stMetricValue"] span {{
+    color: {c['metric_value']} !important; font-weight: 700 !important;
+    font-size: 22px !important;
+}}
 
 /* ── Primary button ───────────────────────────────────────────────────── */
 .stButton > button[kind="primary"],
