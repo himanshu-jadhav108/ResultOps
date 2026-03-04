@@ -156,6 +156,31 @@ class Analytics:
             ),
         }
 
+    def student_master_list(self, semester_key: str) -> pd.DataFrame:
+        """Return full student master list with all fields (unsorted)."""
+        records = self._get_results(semester_key)
+        if not records:
+            return pd.DataFrame()
+
+        rows = []
+        for r in records:
+            sgpa = r.get("sgpa")
+            rows.append(
+                {
+                    "PRN": r.get("prn", ""),
+                    "Seat No": r.get("seat_no", ""),
+                    "Name": r.get("name", ""),
+                    "SGPA": sgpa,
+                    "Credits Earned": r.get("credits_earned", ""),
+                    "Credits Total": r.get("credits_total", ""),
+                    "Subjects": len(r.get("subjects", [])),
+                    "Status": r.get("result_status", ""),
+                    "Category": _categorize_sgpa(sgpa),
+                }
+            )
+
+        return pd.DataFrame(rows)
+
     def student_rank_list(self, semester_key: str) -> pd.DataFrame:
         """Return rank list sorted by SGPA descending — sequential numbering (1, 2, 3...)."""
         records = self._get_results(semester_key)

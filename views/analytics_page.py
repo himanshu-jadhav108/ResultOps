@@ -22,7 +22,9 @@ def _try_load():
 
 
 # ── Excel export — selective sheets ───────────────────────────────────────────
-def _build_excel(summary, rank_df, subj_df, dist_df, include, meta_info=None) -> bytes:
+def _build_excel(
+    summary, rank_df, subj_df, dist_df, include, meta_info=None, master_df=None
+) -> bytes:
     """Build Excel with only the selected sheets."""
     HFILL = PatternFill("solid", fgColor="1F4E79")
     AFILL = PatternFill("solid", fgColor="EBF2FF")
@@ -60,6 +62,14 @@ def _build_excel(summary, rank_df, subj_df, dist_df, include, meta_info=None) ->
 
     out = io.BytesIO()
     with pd.ExcelWriter(out, engine="openpyxl") as w:
+        if (
+            include.get("student_master")
+            and master_df is not None
+            and not master_df.empty
+        ):
+            master_df.to_excel(w, sheet_name="Student Master", index=False)
+            _style(w.sheets["Student Master"], master_df)
+
         if include.get("summary"):
             # Add college/university metadata to the summary sheet
             summary_data = {}
@@ -186,6 +196,7 @@ def render():
     st.markdown("---")
 
     # ── Fetch data ─────────────────────────────────────────────────────────────
+    master_df = analytics.student_master_list(semester_key)
     rank_df = analytics.student_rank_list(semester_key)
     subj_df = analytics.subject_analytics(semester_key)
     dist_df = analytics.sgpa_distribution(semester_key)
@@ -211,13 +222,15 @@ def render():
         )
 
         st.caption("Select which sections to include:")
-        dc1, dc2, dc3, dc4 = st.columns(4)
-        inc_summary = dc1.checkbox("📋 Summary", value=True, key="dl_summary")
-        inc_rank = dc2.checkbox("🏆 Rank List", value=True, key="dl_rank")
-        inc_subject = dc3.checkbox("📚 Subject Analytics", value=True, key="dl_subject")
-        inc_sgpa = dc4.checkbox("📉 SGPA Distribution", value=True, key="dl_sgpa")
+        dc1, dc2, dc3, dc4, dc5 = st.columns(5)
+        inc_master = dc1.checkbox("📄 Student Master", value=True, key="dl_master")
+        inc_summary = dc2.checkbox("📋 Summary", value=True, key="dl_summary")
+        inc_rank = dc3.checkbox("🏆 Rank List", value=True, key="dl_rank")
+        inc_subject = dc4.checkbox("📚 Subject Analytics", value=True, key="dl_subject")
+        inc_sgpa = dc5.checkbox("📉 SGPA Distribution", value=True, key="dl_sgpa")
 
         include = {
+            "student_master": inc_master,
             "summary": inc_summary,
             "rank_list": inc_rank,
             "subject": inc_subject,
@@ -236,7 +249,7 @@ def render():
         else:
             try:
                 excel_bytes = _build_excel(
-                    summary, rank_df, subj_df, dist_df, include, meta_info
+                    summary, rank_df, subj_df, dist_df, include, meta_info, master_df
                 )
                 safe_dept = dept_select.replace(" ", "_")[:20]
                 safe_sem = sem_label.replace(" ", "_").replace("—", "").strip()[:15]
