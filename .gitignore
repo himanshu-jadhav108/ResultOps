@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Firebase - NEVER commit this
 firebase_key.json
 *.json
@@ -89,4 +88,5 @@ _pages_old/
 # ── Streamlit ───────────────────────────────────────────────────
 .streamlit/secrets.toml
 .streamlit/config.toml
->>>>>>> origin/develop
+
+.devcontainer/devcontainer.json
