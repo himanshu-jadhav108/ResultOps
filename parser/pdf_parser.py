@@ -5,7 +5,7 @@ Extracts raw text from text-based university ledger PDFs using pdfplumber.
 
 import logging
 from pathlib import Path
-from typing import Union
+from typing import Any, Union
 
 import pdfplumber
 
@@ -29,6 +29,7 @@ def extract_text_from_pdf(source: Union[str, Path, bytes]) -> str:
     import io
 
     try:
+        pdf_file: Any
         if isinstance(source, (str, Path)):
             pdf_file = open(source, "rb")
         else:
@@ -60,5 +61,7 @@ def extract_text_from_pdf(source: Union[str, Path, bytes]) -> str:
         )
         return full_text
 
-    except pdfplumber.utils.exceptions.PDFSyntaxError as e:
-        raise RuntimeError(f"PDF is corrupted or not a valid PDF file: {e}") from e
+    except Exception as e:
+        if "PDFSyntax" in type(e).__name__ or "pdf" in str(e).lower():
+            raise RuntimeError(f"PDF is corrupted or not a valid PDF file: {e}") from e
+        raise
