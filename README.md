@@ -9,7 +9,7 @@
 
 **University-grade result processing platform — built for SPPU affiliated colleges**
 
-[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.35+-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)](https://streamlit.io)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore-FFCA28?style=flat-square&logo=firebase&logoColor=black)](https://firebase.google.com)
 [![Live App](https://img.shields.io/badge/Live%20App-Streamlit%20Cloud-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)](https://your-app-url.streamlit.app)
@@ -47,45 +47,62 @@
 
 ```
 ResultOps/
-├── app.py                       # Streamlit multi-page application (entry point)
-├── logo.png                     # App logo shown in sidebar and README
-├── firebase_key.json            # Firebase service account key (NOT in git)
-├── .env                         # Environment variables (NOT in git)
-├── .env.example                 # Template for .env
-├── requirements.txt             # Python dependencies
+├── app.py                          # Streamlit entry point — routing, theme, auth, sidebar
+├── logo.png                        # App logo (sidebar + README)
+├── setup.cfg                       # Tool configuration (flake8, mypy, pytest)
+├── requirements.txt                # Production dependencies
+├── requirements-dev.txt            # Dev dependencies (testing, linting, security)
+├── .env.example                    # Environment variable template
 │
-├── parser/                      # PDF extraction and parsing
-│   ├── refactored_parser.py     # Full parsing pipeline — metadata + student blocks
-│   └── pdf_parser.py            # Text extraction via pdfplumber
+├── parser/                         # PDF extraction & parsing pipeline
+│   ├── __init__.py
+│   ├── pdf_parser.py               # Raw text extraction via pdfplumber
+│   ├── metadata_extractor.py       # University, college, department, session detection
+│   ├── student_parser.py           # Student block splitting + subject line parsing
+│   └── refactored_parser.py        # Unified pipeline — orchestrates metadata + students + confidence
 │
 ├── database/
-│   └── db.py                    # Firebase Admin SDK client (singleton + Streamlit secrets)
+│   ├── __init__.py
+│   └── db.py                       # Firebase Admin SDK client (Streamlit secrets + .env fallback)
 │
 ├── analytics/
-│   └── analytics.py             # Unified analytics — queries, ranking, comparison, difficulty
+│   ├── __init__.py
+│   └── analytics.py                # Queries, ranking, comparison, difficulty, SGPA distribution
 │
 ├── services/
-│   ├── result_service.py        # Firestore writes, batch inserts, duplicate guard
-│   └── excel_export.py          # Styled multi-sheet Excel workbook generator
+│   ├── __init__.py
+│   ├── result_service.py           # Firestore writes, batch inserts, duplicate guard
+│   └── excel_export.py             # Styled multi-sheet Excel workbook generator
 │
-├── views/                       # Streamlit page views
-│   ├── analytics_page.py        # Dashboard with charts, tables, view toggle, Excel download
-│   ├── history_page.py          # Upload history + admin-only delete functionality
-│   └── system_stats.py          # System statistics (admin-only)
+├── views/                          # Streamlit page views
+│   ├── __init__.py
+│   ├── upload_page.py              # PDF upload, parse preview, validation, save, inline Excel export
+│   ├── analytics_page.py           # Dashboard — charts, tables, view toggle, selective Excel download
+│   ├── history_page.py             # Upload history + admin-only delete
+│   └── system_stats.py             # System statistics (admin-only)
 │
 ├── utils/
-│   ├── theme.py                 # Dark/light theme manager with CSS injection
-│   ├── auth.py                  # 3-tier authentication (READ / WRITE / ADMIN)
-│   └── validators.py            # Pre-save data validation routines
+│   ├── __init__.py
+│   ├── theme.py                    # Dark/light theme manager with full CSS injection
+│   ├── auth.py                     # 3-tier authentication (READ / WRITE / ADMIN)
+│   └── validators.py               # Pre-save data validation (SGPA, PRN, subjects)
 │
 ├── test/
-│   └── test_parser.py           # Unit tests for parser and ranking
+│   ├── __init__.py
+│   ├── test_parser.py              # Unit + integration tests for parser and ranking
+│   └── test_connection.py          # Firebase connectivity check script
+│
+├── .github/workflows/
+│   └── ci.yml                      # GitHub Actions CI — black, flake8, mypy, pytest, bandit
 │
 ├── .streamlit/
-│   └── config.toml              # Streamlit configuration
+│   └── config.toml                 # Streamlit server configuration
 │
-├── hosting.md                   # Step-by-step Streamlit Cloud deployment guide
-└── github_actions.md            # GitHub Actions CI/CD setup guide
+├── docs/
+│   ├── hosting.md                  # Step-by-step Streamlit Cloud deployment guide
+│   └── github_actions.md           # GitHub Actions CI/CD setup guide
+│
+└── hash_password/                  # Utility to generate SHA-256 password hashes
 ```
 
 ---
@@ -105,66 +122,87 @@ flowchart TD
     subgraph USER["👤  USER LAYER"]
         direction LR
         A["👤 Faculty / Admin"]
-        B["🖥️ Streamlit Web App\napp.py · Port 8501\n5 Pages: Upload · Analytics · Dashboard · History · Stats"]
+        B["🖥️ Streamlit Web App<br/>app.py · Port 8501"]
+    end
+
+    subgraph PAGES["📑  PAGE VIEWS"]
+        direction LR
+        P1["📤 Upload Page<br/>upload_page.py"]
+        P2["📊 Analytics Page<br/>analytics_page.py"]
+        P3["📋 History Page<br/>history_page.py"]
+        P4["⚙️ System Stats<br/>system_stats.py"]
     end
 
     subgraph PARSE["📄  PDF PROCESSING LAYER"]
         direction LR
-        C["📄 PDF Parser\npdf_parser.py"]
-        D["🔍 Metadata Extractor\nrefactored_parser.py"]
-        E["👥 Student Parser\nrefactored_parser.py"]
+        C["📄 PDF Parser<br/>pdf_parser.py<br/>pdfplumber text extraction"]
+        D["🔍 Metadata Extractor<br/>metadata_extractor.py<br/>University · College · Dept · Sem"]
+        E["👥 Student Parser<br/>student_parser.py<br/>PRN · SGPA · Subjects"]
+        F["🔗 Unified Pipeline<br/>refactored_parser.py<br/>Orchestrator + Confidence Score"]
     end
 
-    subgraph VALID["🧪  VALIDATION + AUTH LAYER"]
+    subgraph AUTH["🔐  AUTH + VALIDATION"]
         direction LR
-        F["🧪 Data Validator\nvalidators.py"]
-        G{"🚫 Duplicate Guard\nSemester Key Lookup"}
-        H["🔐 3-Tier Auth\nauth.py · READ/WRITE/ADMIN"]
+        G["🔐 3-Tier Auth<br/>auth.py<br/>READ · WRITE · ADMIN"]
+        H["🧪 Data Validator<br/>validators.py"]
+        I{"🚫 Duplicate Guard<br/>Semester Key Check"}
     end
 
-    subgraph FIRE["🔥  DATABASE — FIREBASE FIRESTORE"]
+    subgraph FIRE["🔥  FIREBASE FIRESTORE"]
         direction LR
-        I["🔥 Firebase Admin SDK\ndb.py · asia-south1"]
-        J["📁 semesters collection\nDoc ID = semester_key"]
-        K["📋 results collection\nOne doc per student"]
+        J["🔥 Firebase SDK<br/>db.py"]
+        K["📁 semesters<br/>collection"]
+        L["📋 results<br/>collection"]
     end
 
-    subgraph OUT["📊  ANALYTICS & OUTPUT LAYER"]
+    subgraph OUT["📊  ANALYTICS + EXPORT"]
         direction LR
-        L["📊 Unified Analytics\nanalytics.py\nRanking · Comparison · Difficulty"]
-        M["📥 Excel Export\nSelective sheets · Styled"]
-        N["⬇️ Browser Download\n.xlsx"]
+        M["📊 Analytics Engine<br/>analytics.py<br/>Ranking · Comparison · Difficulty"]
+        N["📥 Excel Export<br/>excel_export.py<br/>Selective · Styled · Multi-sheet"]
+        O["⬇️ Browser Download<br/>.xlsx"]
     end
 
-    A -->|Upload PDF| B
-    B -->|PDF bytes| C
-    C -->|Full text| D
-    D -->|PDFMetadata| E
-    E -->|StudentRecord list| F
-    F -->|Passed| G
-    G -->|❌ Exists| B
-    G -->|✅ New| I
-    H -.->|Credentials| I
-    I -->|batch write| J
-    I -->|batch write × N| K
-    K -->|query| L
-    J -.->|metadata| L
-    L -->|DataFrames| B
-    L --> M
+    A -->|"Login"| G
+    G -->|"Authenticated"| B
+    B --> P1 & P2 & P3 & P4
+
+    P1 -->|"Upload PDF"| C
+    C -->|"Raw text"| F
+    F --> D & E
+    D -->|"PDFMetadata"| F
+    E -->|"StudentRecord list"| F
+
+    F -->|"Parsed data"| H
+    H -->|"Validated"| I
+    I -->|"❌ Exists"| P1
+    I -->|"✅ New"| J
+
+    J -->|"batch write"| K
+    J -->|"batch write × N"| L
+
+    P2 -->|"Query"| M
+    L -->|"docs"| M
+    K -.-|"metadata"| M
+    M -->|"DataFrames"| P2
     M --> N
+    N --> O
+
+    P3 -->|"List/Delete"| J
+    P4 -->|"Stats"| J
 
     class A,B user
-    class C,D,E parser
-    class F,H validate
-    class G decision
-    class I,J,K firebase
-    class L analytics
-    class M,N export
+    class P1,P2,P3,P4 user
+    class C,D,E,F parser
+    class G,H validate
+    class I decision
+    class J,K,L firebase
+    class M analytics
+    class N,O export
 ```
 
 **Upload Data Flow:**
 ```
-PDF Upload → Text Extract → Metadata Detect → Student Parse
+PDF Upload → Text Extract → Metadata Detect → Student Parse → Confidence Score
     → Validate → Duplicate Check → Firestore Write → Excel Export
 ```
 
@@ -305,7 +343,7 @@ Requires **text-based** (not scanned) SPPU ledger PDFs. Structure:
 PRN: XXXXX  SEAT NO.: YYY  NAME: Student Name
 SEMESTER: 5
 
-410241  45  18  20  --  --  83  4  O  10  40
+410241  45  18  20  --  83  4  O  10  40
 ...
 
 Winter Session 2025 SGPA : 8.50  Credits Earned/Total : 24/24
@@ -324,6 +362,21 @@ SGPA: (SEM-5) 8.50
 | `READ_PASSWORD_HASH` | SHA-256 hash for read-only access |
 | `WRITE_PASSWORD_HASH` | SHA-256 hash for upload/write access |
 | `ADMIN_PASSWORD_HASH` | SHA-256 hash for admin access (stats, delete) |
+
+---
+
+## 🧪 CI/CD Pipeline
+
+The GitHub Actions CI pipeline runs on every push to `main` and `develop`:
+
+| Step | Tool | What it checks |
+|---|---|---|
+| Formatting | `black --check .` | Code style consistency |
+| Lint (strict) | `flake8 --select=E9,F63,F7,F82` | Syntax errors, undefined names |
+| Lint (warnings) | `flake8 --exit-zero` | Line length, complexity (non-blocking) |
+| Type Check | `mypy` | Type annotations in `parser/`, `utils/`, `analytics/` |
+| Tests | `pytest test/ -v` | 12 unit + integration tests |
+| Security | `bandit -ll` | Common security vulnerabilities |
 
 ---
 
@@ -356,8 +409,8 @@ SGPA: (SEM-5) 8.50
 
 | Document | Description |
 |---|---|
-| [**hosting.md**](hosting.md) | Step-by-step guide to deploy on Streamlit Cloud |
-| [**github_actions.md**](github_actions.md) | GitHub Actions CI/CD pipeline setup |
+| [**hosting.md**](docs/hosting.md) | Step-by-step guide to deploy on Streamlit Cloud |
+| [**github_actions.md**](docs/github_actions.md) | GitHub Actions CI/CD pipeline setup |
 
 ---
 

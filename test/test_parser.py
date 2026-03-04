@@ -55,7 +55,9 @@ class TestStudentBlockParser:
         assert len(blocks) == 2
 
     def test_parse_prn_extraction(self):
-        block = "PRN: 123ABC456DEF SEAT NO: S123 NAME: Test Student\nSGPA: 8.0"
+        block = (
+            "PRN: 123ABC456DEF SEAT NO: S123 NAME: Test Student RESULT: PASS\nSGPA: 8.0"
+        )
         parser = StudentBlockParser()
         student = parser.parse_student_block(block)
         assert student is not None
@@ -79,8 +81,8 @@ class TestStudentBlockParser:
     def test_parse_subjects(self):
         block = """
         PRN: TEST123 SEAT NO: S1 NAME: Test
-        410241  45  18  20  --  --  83  4  O  10  40
-        410242  40  15  --  --  --  55  3  A  9  27
+        410241  45  18  20  --  83  4  O  10  40
+        410242  40  15  --  --  55  3  A  9  27
         SGPA: 8.0
         """
         parser = StudentBlockParser()
@@ -192,24 +194,24 @@ class TestFullParsing:
         
         PRN: 1020180001 SEAT NO: 1001 NAME: RAHUL SHARMA
         SEMESTER: 5
-        
-        410241  45  18  20  --  --  83  4  O  10  40
-        410242  40  15  --  --  --  55  3  A  9  27
-        410243  42  16  --  --  --  58  3  A  9  27
-        410244  38  14  --  --  --  52  3  B  8  24
-        410245  44  17  --  --  --  61  3  A  9  27
-        
+
+        410241  45  18  20  --  83  4  O  10  40
+        410242  40  15  --  --  55  3  A  9  27
+        410243  42  16  --  --  58  3  A  9  27
+        410244  38  14  --  --  52  3  B  8  24
+        410245  44  17  --  --  61  3  A  9  27
+
         Winter Session 2024 SGPA : 8.50  Credits Earned/Total : 24/24
         SGPA: (SEM-5) 8.50
-        
+
         PRN: 1020180002 SEAT NO: 1002 NAME: PRIYA PATEL
         SEMESTER: 5
-        
-        410241  35  12  15  --  --  62  4  C  7  28
-        410242  30  10  --  --  --  40  3  D  6  18
-        410243  38  14  --  --  --  52  3  B  8  24
-        410244  25  8  --  --  --  33  3  F  0  0
-        410245  40  15  --  --  --  55  3  A  9  27
+
+        410241  35  12  15  --  62  4  C  7  28
+        410242  30  10  --  --  40  3  D  6  18
+        410243  38  14  --  --  52  3  B  8  24
+        410244  25  8   --  --  33  3  F  0  0
+        410245  40  15  --  --  55  3  A  9  27
         
         Winter Session 2024 SGPA : 5.20  Credits Earned/Total : 20/24
         SGPA: (SEM-5) 5.20

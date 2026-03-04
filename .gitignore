@@ -49,11 +49,14 @@ Thumbs.db
 Desktop.ini
 *.lnk
 
-# ── Testing ───────────────────────────────────────────────────────
+# ── Testing & Quality ────────────────────────────────────────────
 .coverage
 htmlcov/
 .pytest_cache/
+.mypy_cache/
 .tox/
+coverage.xml
+pytest_output.txt
 
 # ── Temporary & Generated ────────────────────────────────────────
 *.log
@@ -63,4 +66,3 @@ _pages_old/
 
 # ── Streamlit ───────────────────────────────────────────────────
 .streamlit/secrets.toml
-.streamlit/config.toml
