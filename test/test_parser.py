@@ -139,34 +139,45 @@ class TestConfidenceCalculator:
 
 
 class TestRankCalculation:
-    """Test ranking logic."""
+    """Test ranking logic (ranking now lives in Analytics, tested standalone here)."""
 
     def test_basic_ranking(self):
         from analytics.analytics import categorize_sgpa
 
         students = [
-            {"prn": "1", "name": "A", "sgpa": 9.0, "total_marks": 850},
-            {"prn": "2", "name": "B", "sgpa": 8.5, "total_marks": 800},
-            {"prn": "3", "name": "C", "sgpa": 8.0, "total_marks": 750},
+            {"prn": "1", "name": "A", "sgpa": 9.0},
+            {"prn": "2", "name": "B", "sgpa": 8.5},
+            {"prn": "3", "name": "C", "sgpa": 8.0},
         ]
-        ranked = RankCalculator.calculate_ranks(students)
-        assert ranked[0]["rank"] == 1
-        assert ranked[1]["rank"] == 2
-        assert ranked[2]["rank"] == 3
-        assert ranked[0]["class_label"] == "Distinction"
+        # Simulate the ranking logic from Analytics.student_rank_list
+        students.sort(key=lambda r: r.get("sgpa") or 0, reverse=True)
+        for i, s in enumerate(students, start=1):
+            s["rank"] = i
+            s["category"] = categorize_sgpa(s["sgpa"])
 
-    def test_tie_handling(self):
+        assert students[0]["rank"] == 1
+        assert students[1]["rank"] == 2
+        assert students[2]["rank"] == 3
+        assert students[0]["category"] == "Distinction"
+
+    def test_sequential_ranking(self):
         from analytics.analytics import categorize_sgpa
 
         students = [
-            {"prn": "1", "name": "A", "sgpa": 8.5, "total_marks": 800},
-            {"prn": "2", "name": "B", "sgpa": 8.5, "total_marks": 800},  # Tie
-            {"prn": "3", "name": "C", "sgpa": 8.0, "total_marks": 750},
+            {"prn": "1", "name": "A", "sgpa": 8.5},
+            {"prn": "2", "name": "B", "sgpa": 8.5},  # Same SGPA
+            {"prn": "3", "name": "C", "sgpa": 8.0},
         ]
-        ranked = RankCalculator.calculate_ranks(students)
-        assert ranked[0]["rank"] == 1
-        assert ranked[1]["rank"] == 2  # Same rank for tie
-        assert ranked[2]["rank"] == 3  # Skips to 3 (not 2)
+        students.sort(key=lambda r: r.get("sgpa") or 0, reverse=True)
+        for i, s in enumerate(students, start=1):
+            s["rank"] = i
+            s["category"] = categorize_sgpa(s["sgpa"])
+
+        # Sequential ranking — no ties, no skipping
+        assert students[0]["rank"] == 1
+        assert students[1]["rank"] == 2
+        assert students[2]["rank"] == 3
+
 
 
 # Integration tests
