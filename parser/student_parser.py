@@ -130,10 +130,9 @@ def _parse_subject_lines(lines: list[str]) -> list[SubjectResult]:
     Each subject line starts with a subject code (digits/uppercase letters).
 
     Strategy:
-    - Find lines matching subject code pattern
-    - Extract all numbers from the line
-    - Last number before grade = total (usually)
-    - Handle AC (carried/absent) subjects
+    - Find the Grade column (A, B, O, F, etc.) as an anchor.
+    - Extract marks and credits to the left of the grade.
+    - Extract grade points and credit points to the right of the grade.
     """
     subjects = []
 
@@ -146,48 +145,70 @@ def _parse_subject_lines(lines: list[str]) -> list[SubjectResult]:
             continue
 
         subject_code = tokens[0]
+        # rest of the line starting after the code
+        rest = " ".join(tokens[1:])
+
         is_ac = bool(re.search(r"\bAC\b", line, re.IGNORECASE))
         is_absent = bool(re.search(r"\bAB\b|\bAbsent\b", line, re.IGNORECASE))
 
-        # Extract all numbers and grade from the rest of the line
-        rest = " ".join(tokens[1:])
-
-        numbers = [int(m) for m in _NUMBER_PATTERN.findall(rest)]
+        # 1. Find the Grade as an anchor
         grade_match = _GRADE_PATTERN.search(rest)
-        grade = grade_match.group(1) if grade_match else None
+        if not grade_match:
+            # Fallback for subjects without grades (rare)
+            nums = [int(n) for n in _NUMBER_PATTERN.findall(rest)]
+            total = nums[-1] if nums else None
+            subjects.append(
+                SubjectResult(
+                    subject_code=subject_code,
+                    components={},
+                    total=total,
+                    grade=None,
+                    grade_point=None,
+                    credit_point=None,
+                    is_absent=is_absent,
+                    is_ac=is_ac,
+                )
+            )
+            continue
 
-        # Build component dict
-        components = {}
+        grade = grade_match.group(1)
+        grade_start = grade_match.start()
+
+        # 2. Split into left and right of grade
+        left_part = rest[:grade_start].strip()
+        right_part = rest[grade_match.end() :].strip()
+
+        left_numbers = [int(m) for m in _NUMBER_PATTERN.findall(left_part)]
+        right_numbers = [int(m) for m in _NUMBER_PATTERN.findall(right_part)]
+
+        # 3. Extract logic
+        # Sequence: [Components...] Total Credits [GRADE] GP CP
         total = None
+        credits = None
         grade_point = None
         credit_point = None
+        components = {}
 
-        if numbers:
-            # Heuristic: last large number (>= 10 typically) before grade position is total
-            # grade_point is usually float, credit_point is float too
-            # Numbers ordering: component marks... total credits grade_point credit_point
+        # Right side: [GP, CP]
+        if len(right_numbers) >= 2:
+            grade_point = float(right_numbers[0])
+            credit_point = float(right_numbers[1])
+        elif len(right_numbers) == 1:
+            grade_point = float(right_numbers[0])
 
-            # Find float values for grade_point and credit_point
-            float_vals = [float(m) for m in re.findall(r"\b\d+\.\d+\b", rest)]
+        # Left side: [Component1, Component2, ..., Total, Credits]
+        if len(left_numbers) >= 2:
+            total = left_numbers[-2]
+            credits = left_numbers[-1]
+            component_nums = left_numbers[:-2]
 
-            if float_vals:
-                credit_point = float_vals[-1] if len(float_vals) >= 2 else None
-                grade_point = float_vals[-2] if len(float_vals) >= 2 else float_vals[0]
-
-            # Total is usually the last integer before floats or grade
-            if numbers:
-                total = numbers[-1]
-                component_nums = numbers[:-1]  # everything before total
-
-                # Name components generically if we don't know headers
-                component_labels = ["ESE", "ISE", "TW", "PR", "OR"]
-                for idx, val in enumerate(component_nums):
-                    label = (
-                        component_labels[idx]
-                        if idx < len(component_labels)
-                        else f"C{idx+1}"
-                    )
-                    components[label] = val
+            # Categorize components
+            labels = ["ESE", "ISE", "TW", "PR", "OR"]
+            for idx, val in enumerate(component_nums):
+                label = labels[idx] if idx < len(labels) else f"C{idx+1}"
+                components[label] = val
+        elif len(left_numbers) == 1:
+            total = left_numbers[0]
 
         subjects.append(
             SubjectResult(

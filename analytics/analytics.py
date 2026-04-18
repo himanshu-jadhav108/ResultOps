@@ -11,6 +11,7 @@ from typing import Optional
 
 import pandas as pd
 from database.db import get_client
+from analytics.rank_calculator import calculate_ranks
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,7 @@ class SubjectDifficulty:
 
 
 def _categorize_sgpa(sgpa: Optional[float]) -> str:
+    """Standard academic category mapping."""
     if sgpa is None:
         return "N/A"
     if sgpa >= 7.75:
@@ -182,20 +184,20 @@ class Analytics:
         return pd.DataFrame(rows)
 
     def student_rank_list(self, semester_key: str) -> pd.DataFrame:
-        """Return rank list sorted by SGPA descending — sequential numbering (1, 2, 3...)."""
+        """Return proper tie-aware rank list (competition ranking: 1, 2, 2, 4)."""
         records = self._get_results(semester_key)
         if not records:
             return pd.DataFrame()
 
-        # Sort by SGPA descending
-        records.sort(key=lambda r: r.get("sgpa") or 0, reverse=True)
+        # Use RankCalculator for proper tie-handling (SGPA + Total Marks tie-breaker)
+        ranked_records = calculate_ranks(records)
 
         rows = []
-        for i, r in enumerate(records, start=1):
+        for r in ranked_records:
             sgpa = r.get("sgpa")
             rows.append(
                 {
-                    "Rank": i,
+                    "Rank": r.get("Rank", 1),
                     "PRN": r.get("prn", ""),
                     "Seat No": r.get("seat_no", ""),
                     "Name": r.get("name", ""),
@@ -275,7 +277,7 @@ class Analytics:
                     "College": data.get("college", ""),
                     "Department": data.get("department", ""),
                     "Semester No": data.get("semester_number", ""),
-                    "Session": f"{data.get('session_type','')} {data.get('session_year','')}",
+                    "Session": f"{data.get('session_type', '')} {data.get('session_year', '')}",
                     "Students": data.get("student_count", ""),
                     "Uploaded At": str(data.get("created_at", ""))[:10],
                 }
@@ -378,7 +380,8 @@ class Analytics:
     def subject_difficulty(self, semester_key: str) -> pd.DataFrame:
         """
         Rank subjects by difficulty score.
-        Score = (Fail% × 0.6) + ((100 − AvgMarks) × 0.4)  [higher = harder]
+        Formula: (Fail% × 0.6) + ((100 − NormalizedAvg) × 0.4)
+        NormalizedAvg adjusts for subjects not out of 100 marks.
         """
         records = self._get_results(semester_key)
         if not records:
@@ -390,7 +393,7 @@ class Analytics:
                 "passed": 0,
                 "failed": 0,
                 "highest": 0,
-                "lowest": 9999,
+                "lowest": None,
             }
         )
         for r in records:
@@ -406,16 +409,37 @@ class Analytics:
                     s["passed"] += 1
                 s["highest"] = max(s["highest"], total)
                 if total > 0:
-                    s["lowest"] = min(s["lowest"], total)
+                    if s["lowest"] is None or total < s["lowest"]:
+                        s["lowest"] = total
 
         rows = []
         for code, s in stats.items():
             appeared = s["passed"] + s["failed"]
             if appeared == 0:
                 continue
+
             avg = sum(s["marks"]) / len(s["marks"]) if s["marks"] else 0
             fail_rate = s["failed"] / appeared * 100
-            difficulty = (fail_rate * 0.6) + ((100 - avg) * 0.4)
+
+            # Heuristic: Detect max marks (assume 25, 40, 50, 60, 75, 80, 100, 125, 150, 200 etc.)
+            h = s["highest"]
+            est_max = 100
+            scales = [25, 40, 50, 60, 75, 80, 100, 125, 150, 200]
+            for sc in scales:
+                if h <= sc + (
+                    sc * 0.05
+                ):  # Allowance for slight rounding or extra credits
+                    est_max = sc
+                    break
+            else:
+                est_max = h if h > 0 else 100
+
+            norm_avg = (avg / est_max * 100) if est_max > 0 else 0
+            norm_avg = min(100, norm_avg)
+
+            # Formula: (Fail% × 0.6) + ((100 − NormalizedAvg) × 0.4)
+            difficulty = (fail_rate * 0.6) + ((100 - norm_avg) * 0.4)
+
             rows.append(
                 {
                     "Subject Code": code,
@@ -426,7 +450,7 @@ class Analytics:
                     "Fail %": round(fail_rate, 1),
                     "Avg Marks": round(avg, 1),
                     "Highest": s["highest"],
-                    "Lowest": s["lowest"] if s["lowest"] < 9999 else 0,
+                    "Lowest": s["lowest"] or 0,
                     "Difficulty": round(difficulty, 1),
                 }
             )

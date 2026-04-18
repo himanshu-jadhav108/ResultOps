@@ -1,0 +1,123 @@
+Run started:2026-04-18 03:17:01.228420+00:00
+
+Test results:
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'color: #10b981; font-weight:800'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html
+   Location: views/analytics_page.py:116:12
+115	            "fail": "background-color: rgba(239, 68, 68, 0.15); color: #f87171; font-weight:700",
+116	            "pass_high": "color: #10b981; font-weight:800",
+117	            "pass_mid": "color: #f59e0b; font-weight:800",
+118	            "pass_low": "color: #ef4444; font-weight:800",
+119	        }
+120	    else:
+121	        return {
+122	            "distinction": "background-color: #ecfdf5; color: #059669; font-weight:700",
+123	            "first_class": "background-color: #eef2ff; color: #4f46e5; font-weight:700",
+124	            "fail": "background-color: #fef2f2; color: #dc2626; font-weight:700",
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'color: #f59e0b; font-weight:800'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html
+   Location: views/analytics_page.py:117:12
+116	            "pass_high": "color: #10b981; font-weight:800",
+117	            "pass_mid": "color: #f59e0b; font-weight:800",
+118	            "pass_low": "color: #ef4444; font-weight:800",
+119	        }
+120	    else:
+121	        return {
+122	            "distinction": "background-color: #ecfdf5; color: #059669; font-weight:700",
+123	            "first_class": "background-color: #eef2ff; color: #4f46e5; font-weight:700",
+124	            "fail": "background-color: #fef2f2; color: #dc2626; font-weight:700",
+125	            "pass_high": "color: #059669; font-weight:800",
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'color: #ef4444; font-weight:800'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html
+   Location: views/analytics_page.py:118:12
+117	            "pass_mid": "color: #f59e0b; font-weight:800",
+118	            "pass_low": "color: #ef4444; font-weight:800",
+119	        }
+120	    else:
+121	        return {
+122	            "distinction": "background-color: #ecfdf5; color: #059669; font-weight:700",
+123	            "first_class": "background-color: #eef2ff; color: #4f46e5; font-weight:700",
+124	            "fail": "background-color: #fef2f2; color: #dc2626; font-weight:700",
+125	            "pass_high": "color: #059669; font-weight:800",
+126	            "pass_mid": "color: #d97706; font-weight:800",
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'color: #059669; font-weight:800'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html
+   Location: views/analytics_page.py:125:12
+124	            "fail": "background-color: #fef2f2; color: #dc2626; font-weight:700",
+125	            "pass_high": "color: #059669; font-weight:800",
+126	            "pass_mid": "color: #d97706; font-weight:800",
+127	            "pass_low": "color: #dc2626; font-weight:800",
+128	        }
+129	
+130	
+131	# ── Plotly charts ──────────────────────────────────────────────────────────────
+132	
+133	
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'color: #d97706; font-weight:800'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html
+   Location: views/analytics_page.py:126:12
+125	            "pass_high": "color: #059669; font-weight:800",
+126	            "pass_mid": "color: #d97706; font-weight:800",
+127	            "pass_low": "color: #dc2626; font-weight:800",
+128	        }
+129	
+130	
+131	# ── Plotly charts ──────────────────────────────────────────────────────────────
+132	
+133	
+134	def _plotly_bar(df, x, y, title, color, height=300):
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'color: #dc2626; font-weight:800'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html
+   Location: views/analytics_page.py:127:12
+126	            "pass_mid": "color: #d97706; font-weight:800",
+127	            "pass_low": "color: #dc2626; font-weight:800",
+128	        }
+129	
+130	
+131	# ── Plotly charts ──────────────────────────────────────────────────────────────
+132	
+133	
+134	def _plotly_bar(df, x, y, title, color, height=300):
+135	    tc = theme_manager.colors
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 4242
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 6
+		Medium: 0
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 6
+		High: 0
+Files skipped (0):

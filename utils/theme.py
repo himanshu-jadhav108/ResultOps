@@ -1,70 +1,76 @@
 """
-ResultOps - Theme Manager
-Dual light/dark theme system. Dark theme uses app2.py navy palette.
-Light theme uses a clean, professional white palette.
+ResultOps - Professional Premium Theme Engine
+Features: Glassmorphism, HSL Design Tokens, Smooth Transitions,
+and robust Light/Dark mode differentiation.
 """
 
 import streamlit as st
 
-# ── Color palettes ────────────────────────────────────────────────────────────
+# ── Color Palettes (Professional HSL-based) ──────────────────────────────────
 
+# DARK: Sleek Deep Slate & Indigo
 DARK = {
-    "bg": "#060e1f",
-    "sidebar_grad": "linear-gradient(180deg, #0a1628 0%, #0f2c59 60%, #1a4a8a 100%)",
-    "card": "#0d1f3c",
-    "card_border": "rgba(45,140,255,0.25)",
-    "accent": "#2d8cff",
-    "accent2": "#1a4a8a",
-    "text": "#e8f0fe",
-    "text_muted": "#7a9cc4",
-    "text_sub": "#93b5e1",
-    "sidebar_text": "#e8f0fe",
-    "sidebar_hr": "rgba(45,140,255,0.3)",
-    "success": "#00d97e",
-    "warning": "#f5a623",
-    "error": "#ff4d6d",
-    "hr": "rgba(45,140,255,0.15)",
-    "input_bg": "#0d1f3c",
-    "upload_bg": "#0d1f3c",
-    "upload_border": "rgba(45,140,255,0.4)",
-    "select_bg": "#0d1f3c",
-    "expander_bg": "#0d1f3c",
-    "expander_bdr": "rgba(45,140,255,0.2)",
-    "metric_label": "#7a9cc4",
-    "metric_value": "#ffffff",
-    "tab_bg": "#0d1f3c",
+    "bg": "#0f172a",  # slate-900
+    "sidebar_grad": "linear-gradient(165deg, #1e293b 0%, #0f172a 100%)",
+    "card": "rgba(30, 41, 59, 0.7)",  # slate-800 with glass
+    "card_border": "rgba(51, 65, 85, 0.5)",
+    "accent": "#6366f1",  # indigo-500
+    "accent2": "#4f46e5",  # indigo-600
+    "text": "#f8fafc",  # slate-50
+    "text_muted": "#94a3b8",  # slate-400
+    "text_sub": "#cbd5e1",  # slate-300
+    "sidebar_text": "#f8fafc",
+    "sidebar_hr": "rgba(255,255,255,0.1)",
+    "success": "#10b981",  # emerald-500
+    "warning": "#f59e0b",  # amber-500
+    "error": "#ef4444",  # red-500
+    "hr": "rgba(51, 65, 85, 0.3)",
+    "input_bg": "#1e293b",
+    "upload_bg": "rgba(30, 41, 59, 0.4)",
+    "upload_border": "rgba(99, 102, 241, 0.3)",
+    "select_bg": "#1e293b",
+    "expander_bg": "rgba(30, 41, 59, 0.5)",
+    "expander_bdr": "rgba(51, 65, 85, 0.5)",
+    "metric_label": "#94a3b8",
+    "metric_value": "#f8fafc",
+    "tab_bg": "rgba(30, 41, 59, 0.5)",
+    "plotly_grid": "rgba(255,255,255,0.05)",
+    "plotly_tick": "#94a3b8",
 }
 
+# LIGHT: Clean Porcelain & Royal Blue
 LIGHT = {
-    "bg": "#f4f7fb",
-    "sidebar_grad": "linear-gradient(180deg, #1a3a6b 0%, #1e4d8c 60%, #2563b0 100%)",
-    "card": "#ffffff",
-    "card_border": "rgba(37,99,176,0.18)",
-    "accent": "#2563b0",
-    "accent2": "#1a3a6b",
-    "text": "#0f1e3a",
-    "text_muted": "#4a6fa5",
-    "text_sub": "#1a3a6b",
-    "sidebar_text": "#e8f0fe",
-    "sidebar_hr": "rgba(255,255,255,0.25)",
-    "success": "#0d7a45",
-    "warning": "#b45309",
-    "error": "#be123c",
-    "hr": "rgba(37,99,176,0.15)",
-    "input_bg": "#ffffff",
-    "upload_bg": "#eef3fc",
-    "upload_border": "rgba(37,99,176,0.4)",
-    "select_bg": "#ffffff",
-    "expander_bg": "#eef3fc",
-    "expander_bdr": "rgba(37,99,176,0.2)",
-    "metric_label": "#4a6fa5",
-    "metric_value": "#0f1e3a",
-    "tab_bg": "#eef3fc",
+    "bg": "#ffffff",  # Pure white for maximum clarity
+    "sidebar_grad": "linear-gradient(180deg, #0f172a 0%, #1e293b 100%)",
+    "card": "#f8fafc",  # very light gray
+    "card_border": "#e2e8f0",
+    "accent": "#4f46e5",
+    "accent2": "#4338ca",
+    "text": "#0f172a",
+    "text_muted": "#475569",  # slate-600 for better visibility
+    "text_sub": "#1e293b",
+    "sidebar_text": "#f8fafc",
+    "sidebar_hr": "rgba(255,255,255,0.1)",
+    "success": "#059669",
+    "warning": "#d97706",
+    "error": "#dc2626",
+    "hr": "#e2e8f0",
+    "input_bg": "#f8fafc",
+    "upload_bg": "#f1f5f9",
+    "upload_border": "rgba(79, 70, 229, 0.2)",
+    "select_bg": "#f8fafc",
+    "expander_bg": "#f1f5f9",
+    "expander_bdr": "#e2e8f0",
+    "metric_label": "#475569",
+    "metric_value": "#0f172a",
+    "tab_bg": "#f1f5f9",
+    "plotly_grid": "rgba(0,0,0,0.05)",
+    "plotly_tick": "#475569",
 }
 
 
 class ThemeManager:
-    """Manages light/dark theme with toggle + CSS injection."""
+    """Advanced Theme Manager with CSS Injection and Glassmorphism."""
 
     def __init__(self):
         if "theme" not in st.session_state:
@@ -82,447 +88,351 @@ class ThemeManager:
         st.session_state.theme = "light" if self.is_dark else "dark"
 
     def render_toggle(self):
-        """Render the theme toggle button in the sidebar."""
-        label = "☀️ Light Mode" if self.is_dark else "🌙 Dark Mode"
-        if st.sidebar.button(label, key="theme_toggle_btn", use_container_width=True):
+        """High-visibility theme toggle in sidebar."""
+        c = self.colors
+
+        icon = "☀️" if self.is_dark else "🌙"
+        label = "Switch to Light Mode" if self.is_dark else "Switch to Dark Mode"
+
+        # Injected Custom CSS for toggle specifically
+        st.sidebar.markdown(
+            f"""
+            <style>
+            div.stButton > button[key="theme_toggle_btn"] {{
+                background: rgba(255,255,255,0.1) !important;
+                border: 1px solid rgba(255,255,255,0.2) !important;
+                color: white !important;
+                border-radius: 12px !important;
+                font-weight: 600 !important;
+                margin-top: 10px !important;
+                transition: all 0.3s ease !important;
+            }}
+            div.stButton > button[key="theme_toggle_btn"]:hover {{
+                background: rgba(255,255,255,0.2) !important;
+                border-color: {c['accent']} !important;
+            }}
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        if st.sidebar.button(
+            f"{icon} {label}", key="theme_toggle_btn", use_container_width=True
+        ):
             self.toggle()
             st.rerun()
 
     def apply(self):
-        """Inject CSS for the current theme."""
+        """Inject robust, premium CSS for the current theme."""
         c = self.colors
-        # Build the complete light-mode override block
-        # This forces text colors on EVERY possible Streamlit element
-        light_overrides = (
-            ""
-            if self.is_dark
-            else f"""
-/* ══════════════════════════════════════════════════════════════════
-   LIGHT THEME — FORCE ALL TEXT TO DARK COLORS
-   ══════════════════════════════════════════════════════════════════ */
 
-/* Global: every single element in main area */
-.main, .main * {{
-    color: {c['text']} !important;
-}}
-
-/* Re-apply specific overrides after the global rule */
-.main h1, .main h2, .main h3, .main h4 {{
-    color: {c['text']} !important;
-}}
-.main p, .main span, .main li, .main td, .main th, .main label,
-.main div, .main small, .main strong, .main em, .main a {{
-    color: {c['text']} !important;
-}}
-
-/* Captions get muted but still visible */
-[data-testid="stCaptionContainer"],
-[data-testid="stCaptionContainer"] * {{
-    color: {c['text_muted']} !important;
-}}
-
-/* Metric cards */
-[data-testid="stMetricLabel"],
-[data-testid="stMetricLabel"] * {{
-    color: {c['metric_label']} !important;
-}}
-[data-testid="stMetricValue"],
-[data-testid="stMetricValue"] * {{
-    color: {c['metric_value']} !important;
-    font-weight: 700 !important;
-}}
-[data-testid="stMetricDelta"],
-[data-testid="stMetricDelta"] * {{
-    color: {c['text_sub']} !important;
-}}
-
-/* All inputs */
-input, textarea, select {{
-    color: {c['text']} !important;
-    background-color: {c['input_bg']} !important;
-}}
-
-/* Selectbox dropdown text */
-[data-testid="stSelectbox"] span,
-[data-testid="stSelectbox"] div {{
-    color: {c['text']} !important;
-}}
-
-/* Multi-select */
-[data-testid="stMultiSelect"] span {{
-    color: {c['text']} !important;
-}}
-
-/* Radio and checkbox labels */
-[data-testid="stRadio"] label,
-[data-testid="stRadio"] label span,
-[data-testid="stCheckbox"] label,
-[data-testid="stCheckbox"] label span {{
-    color: {c['text']} !important;
-}}
-
-/* File uploader */
-[data-testid="stFileUploader"] span,
-[data-testid="stFileUploader"] small,
-[data-testid="stFileUploader"] p,
-[data-testid="stFileUploader"] label,
-[data-testid="stFileUploader"] div,
-[data-testid="stFileUploadDropzone"] span,
-[data-testid="stFileUploadDropzone"] div {{
-    color: {c['text']} !important;
-}}
-
-/* Expander text */
-[data-testid="stExpander"] summary,
-[data-testid="stExpander"] summary span,
-[data-testid="stExpander"] summary p,
-.streamlit-expanderHeader,
-.streamlit-expanderContent,
-.streamlit-expanderContent * {{
-    color: {c['text']} !important;
-}}
-
-/* Tabs text */
-.stTabs [data-baseweb="tab"],
-.stTabs [data-baseweb="tab-list"],
-.stTabs [data-baseweb="tab"] * {{
-    color: {c['text']} !important;
-}}
-
-/* Alert/info/success/warning/error boxes */
-.stAlert, .stAlert * {{
-    color: {c['text']} !important;
-}}
-[data-testid="stNotification"],
-[data-testid="stNotification"] * {{
-    color: {c['text']} !important;
-}}
-
-/* Dataframe headers and cells */
-[data-testid="stDataFrame"] th,
-[data-testid="stDataFrame"] td,
-[data-testid="stDataFrame"] * {{
-    color: {c['text']} !important;
-}}
-
-/* Download button text */
-.stDownloadButton button span {{
-    color: white !important;
-}}
-
-/* Spinner text */
-[data-testid="stSpinner"] span {{
-    color: {c['text']} !important;
-}}
-
-/* Toast messages */
-[data-testid="stToast"],
-[data-testid="stToast"] * {{
-    color: {c['text']} !important;
-}}
-
-/* Status widgets */
-[data-testid="stStatusWidget"],
-[data-testid="stStatusWidget"] * {{
-    color: {c['text']} !important;
-}}
-
-/* JSON display */
-[data-testid="stJson"],
-[data-testid="stJson"] * {{
-    color: {c['text']} !important;
-}}
-
-/* Code blocks — keep them readable */
-.stCodeBlock, .stCodeBlock * {{
-    color: {c['text']} !important;
-}}
-
-/* Column container labels */
-[data-testid="column"] * {{
-    color: {c['text']} !important;
-}}
-
-/* Sidebar stays with light text (it has dark background) */
-[data-testid="stSidebar"],
-[data-testid="stSidebar"] * {{
-    color: {c['sidebar_text']} !important;
-}}
-[data-testid="stSidebar"] hr {{
-    border-color: {c['sidebar_hr']} !important;
-}}
-
-/* Primary buttons still white text on colored bg */
-.stButton > button[kind="primary"] span,
-.stDownloadButton > button span {{
-    color: white !important;
-}}
-
-/* File uploader "Browse files" button — white text on dark bg */
-[data-testid="stFileUploader"] button,
-[data-testid="stFileUploader"] button span,
-[data-testid="stFileUploader"] button p,
-[data-testid="stFileUploadDropzone"] button,
-[data-testid="stFileUploadDropzone"] button span,
-[data-testid="baseButton-secondary"] span,
-section[data-testid="stFileUploader"] button[kind="secondary"],
-section[data-testid="stFileUploader"] button[kind="secondary"] span {{
-    color: white !important;
-    background-color: {c['accent']} !important;
-    border-color: {c['accent']} !important;
-}}
-
-/* All secondary buttons — force visible text */
-.stButton > button[kind="secondary"] span {{
-    color: {c['accent']} !important;
-}}
-"""
+        # ── Glassmorphism Effect ─────────────────────────────────────────────
+        glass_effect = (
+            "backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);"
         )
 
+        # ── Base Styles Injection ────────────────────────────────────────────
         st.markdown(
             f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-html, body, [class*="css"] {{
-    font-family: 'Inter', sans-serif;
+/* Main font and bg override */
+* {{
+    font-family: 'Plus Jakarta Sans', sans-serif;
 }}
 
-/* ── App background ───────────────────────────────────────────────────── */
 .stApp {{
+    background-color: {c['bg']};
+    color: {c['text']};
+}}
+
+/* ── APP CONTAINERS ──────────────────────────────────────────────────── */
+
+[data-testid="stAppViewContainer"] {{
     background-color: {c['bg']};
 }}
 
-/* ── Sidebar ──────────────────────────────────────────────────────────── */
+[data-testid="stHeader"] {{
+    background: transparent;
+}}
+
+/* ── SIDEBAR (STAYS DARK) ────────────────────────────────────────────── */
+
 [data-testid="stSidebar"] {{
     background: {c['sidebar_grad']} !important;
-}}
-[data-testid="stSidebar"] * {{ color: {c['sidebar_text']} !important; }}
-[data-testid="stSidebar"] hr {{ border-color: {c['sidebar_hr']} !important; }}
-
-/* ── Main block ───────────────────────────────────────────────────────── */
-.main .block-container {{
-    padding-top: 1.8rem;
-    padding-bottom: 3rem;
-    max-width: 1200px;
+    border-right: 1px solid {c['sidebar_hr']} !important;
 }}
 
-/* ── ALL MAIN CONTENT TEXT ────────────────────────────────────────────── */
-.main h1, .main h2, .main h3, .main h4, .main h5, .main h6 {{
+[data-testid="stSidebar"] * {{
+    color: {c['sidebar_text']} !important;
+}}
+
+[data-testid="stSidebarNav"] {{
+    background: transparent !important;
+}}
+
+/* Active menu item highlight (sidebar) */
+[data-testid="stSidebarNav"] ul li div[data-testid="stNavLink"] {{
+    background-color: transparent !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+}}
+
+[data-testid="stSidebarNav"] ul li div[data-testid="stNavLink"]:hover {{
+    background-color: rgba(255,255,255,0.05) !important;
+}}
+
+[data-testid="stSidebarNav"] ul li div[data-testid="stNavLink"][aria-current="page"] {{
+    background-color: rgba(99, 102, 241, 0.15) !important;
+    border: 1px solid rgba(99, 102, 241, 0.3) !important;
+}}
+
+/* ── MAIN AREA PADDING ────────────────────────────────────────────────── */
+
+.block-container {{
+    padding-top: 2rem !important;
+    padding-bottom: 5rem !important;
+    max-width: 1280px !important;
+}}
+
+/* ── HEADINGS ─────────────────────────────────────────────────────────── */
+
+h1, h2, h3, h4, h5, h6,
+[data-testid="stMarkdownContainer"] h1,
+[data-testid="stMarkdownContainer"] h2,
+[data-testid="stMarkdownContainer"] h3 {{
     color: {c['text']} !important;
+    font-weight: 800 !important;
 }}
 
-[data-testid="stMarkdownContainer"] p,
-[data-testid="stMarkdownContainer"] li,
-[data-testid="stMarkdownContainer"] span,
-[data-testid="stMarkdownContainer"] strong,
-[data-testid="stMarkdownContainer"] em,
-[data-testid="stMarkdownContainer"] a {{
-    color: {c['text']} !important;
-}}
+h1 {{ font-size: 2.2rem !important; margin-bottom: 1rem !important; letter-spacing: -0.02em !important; }}
+h2 {{ font-size: 1.6rem !important; opacity: 0.9 !important; border-bottom: none !important; }}
 
-[data-testid="stCaptionContainer"] p,
-[data-testid="stCaptionContainer"] span {{
-    color: {c['text_muted']} !important;
-}}
+/* ── CARDS & METRICS (GLASS) ────────────────────────────────────────── */
 
-[data-testid="stRadio"] label span,
-[data-testid="stCheckbox"] label span {{
-    color: {c['text']} !important;
-}}
-
-[data-testid="stSelectbox"] label,
-[data-testid="stTextInput"] label,
-[data-testid="stFileUploader"] label,
-[data-testid="stNumberInput"] label,
-[data-testid="stTextArea"] label {{
-    color: {c['text']} !important;
-    font-weight: 500 !important;
-}}
-
-[data-testid="stExpander"] summary span {{
-    color: {c['text_sub']} !important;
-}}
-
-/* ── Headings ─────────────────────────────────────────────────────────── */
-h1 {{
-    color: {c['text']} !important;
-    font-weight: 700 !important;
-    font-size: 28px !important;
-    margin-bottom: 6px !important;
-}}
-h2, h3 {{ color: {c['text_sub']} !important; font-weight: 600 !important; }}
-
-/* ── Metric cards ─────────────────────────────────────────────────────── */
 [data-testid="stMetric"] {{
-    background: {c['card']};
-    border: 1px solid {c['card_border']};
-    border-radius: 12px;
-    padding: 16px 18px;
-}}
-[data-testid="stMetricLabel"] span {{
-    color: {c['metric_label']} !important; font-size: 12px !important;
-}}
-[data-testid="stMetricValue"] span {{
-    color: {c['metric_value']} !important; font-weight: 700 !important;
-    font-size: 22px !important;
+    background: {c['card']} !important;
+    border: 1px solid {c['card_border']} !important;
+    {glass_effect}
+    border-radius: 16px !important;
+    padding: 20px 24px !important;
+    box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.1) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
 }}
 
-/* ── Primary button ───────────────────────────────────────────────────── */
-.stButton > button[kind="primary"],
+[data-testid="stMetric"]:hover {{
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.15) !important;
+}}
+
+[data-testid="stMetricLabel"] p {{
+    color: {c['metric_label']} !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}}
+
+[data-testid="stMetricValue"] div {{
+    color: {c['metric_value']} !important;
+    font-size: 28px !important;
+    font-weight: 800 !important;
+}}
+
+/* ── BUTTONS ─────────────────────────────────────────────────────────── */
+
+.stButton > button,
 .stDownloadButton > button {{
+    border-radius: 12px !important;
+    font-weight: 700 !important;
+    padding: 0.5rem 2rem !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid transparent !important;
+}}
+
+/* Primary */
+.stButton > button[kind="primary"],
+.stDownloadButton > button[kind="primary"] {{
     background: linear-gradient(135deg, {c['accent2']}, {c['accent']}) !important;
     color: white !important;
     border: none !important;
-    border-radius: 8px !important;
-    font-weight: 600 !important;
-    font-size: 15px !important;
-    padding: 10px 28px !important;
-    transition: opacity 0.2s !important;
 }}
-.stButton > button[kind="primary"]:hover,
-.stDownloadButton > button:hover {{ opacity: 0.85 !important; }}
-.stButton > button[kind="primary"] span,
-.stDownloadButton > button span {{ color: white !important; }}
 
-/* ── Secondary button ─────────────────────────────────────────────────── */
+.stButton > button[kind="primary"]:hover {{
+    transform: translateY(-1px);
+    box-shadow: 0 8px 15px -1px rgba(79, 70, 229, 0.4) !important;
+    opacity: 0.95 !important;
+}}
+
+/* Secondary */
 .stButton > button[kind="secondary"] {{
-    background: transparent !important;
+    background-color: {c['card']} !important;
+    border: 1px solid {c['card_border']} !important;
+    color: {c['text']} !important;
+}}
+
+.stButton > button[kind="secondary"]:hover {{
+    border-color: {c['accent']} !important;
+    background-color: transparent !important;
     color: {c['accent']} !important;
-    border: 1px solid {c['accent']} !important;
-    border-radius: 8px !important;
-    font-weight: 600 !important;
-}}
-.stButton > button[kind="secondary"] span {{ color: {c['accent']} !important; }}
-
-/* ── All buttons ──────────────────────────────────────────────────────── */
-.stButton > button {{
-    border-radius: 8px !important;
-    font-weight: 600 !important;
-    transition: all 0.2s !important;
 }}
 
-/* ── Alerts ───────────────────────────────────────────────────────────── */
-.stAlert {{ border-radius: 10px !important; }}
+/* ── INPUTS & FORM ELEMENTS ──────────────────────────────────────────── */
 
-/* ── Dataframe ────────────────────────────────────────────────────────── */
-[data-testid="stDataFrame"] {{ border-radius: 10px; overflow: hidden; }}
-
-/* ── Expander ─────────────────────────────────────────────────────────── */
-[data-testid="stExpander"] > details > summary {{
-    background: {c['expander_bg']} !important;
-    border-radius: 8px !important;
-    border: 1px solid {c['expander_bdr']} !important;
+.stTextInput input, .stTextArea textarea, .stNumberInput input, 
+[data-testid="stSelectbox"] div[data-baseweb="select"] {{
+    background-color: {c['input_bg']} !important;
+    border: 1px solid {c['card_border']} !important;
+    color: {c['text']} !important;
+    border-radius: 12px !important;
     padding: 10px 14px !important;
 }}
-.streamlit-expanderHeader {{
-    background: {c['expander_bg']} !important;
-    border-radius: 8px !important;
-    font-weight: 600 !important;
-    color: {c['text_sub']} !important;
+
+/* Dropdown list */
+[data-baseweb="popover"] div, [data-baseweb="menu"] {{
+    background-color: {c['input_bg']} !important;
+    color: {c['text']} !important;
+    border-bottom-left-radius: 12px !important;
+    border-bottom-right-radius: 12px !important;
+}}
+
+[data-baseweb="option"] {{
+    padding: 8px 12px !important;
+    transition: background 0.2s !important;
+}}
+
+[data-baseweb="option"]:hover {{
+    background-color: {c['accent']} !important;
+    color: white !important;
+}}
+
+/* ── EXPANDER ────────────────────────────────────────────────────────── */
+
+[data-testid="stExpander"] {{
+    background-color: {c['expander_bg']} !important;
     border: 1px solid {c['expander_bdr']} !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
 }}
 
-/* ── Divider ──────────────────────────────────────────────────────────── */
-hr {{
+[data-testid="stExpander"] summary {{
+    padding: 14px 20px !important;
+    font-weight: 700 !important;
+    color: {c['text_sub']} !important;
+}}
+
+/* ── DATA TABLES ─────────────────────────────────────────────────────── */
+
+[data-testid="stDataFrame"] {{
+    border: 1px solid {c['card_border']} !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+}}
+
+/* ── PROGRESS BAR ────────────────────────────────────────────────────── */
+
+[data-testid="stProgressBar"] > div > div > div {{
+    background-color: {c['accent']} !important;
+}}
+
+/* ── TABS ────────────────────────────────────────────────────────────── */
+
+[data-baseweb="tab-list"] {{
+    background-color: transparent !important;
+    gap: 8px !important;
+    margin-bottom: 1rem !important;
+}}
+
+[data-baseweb="tab"] {{
+    background-color: {c['tab_bg']} !important;
+    border-radius: 100px !important;
+    padding: 8px 24px !important;
+    font-weight: 600 !important;
+    color: {c['text_muted']} !important;
+    border: 1px solid {c['card_border']} !important;
+    height: 38px !important;
+}}
+
+[data-baseweb="tab"][aria-selected="true"] {{
+    background-color: {c['accent']} !important;
+    color: white !important;
+    border-color: {c['accent']} !important;
+}}
+
+/* ── ALERTS ─────────────────────────────────────────────────────────── */
+
+.stAlert {{
+    border-radius: 16px !important;
     border: none !important;
-    border-top: 1px solid {c['hr']} !important;
-    margin: 24px 0 !important;
+    padding: 1rem 1.25rem !important;
 }}
 
-/* ── File uploader ────────────────────────────────────────────────────── */
-[data-testid="stFileUploader"] {{
-    border: 2px dashed {c['upload_border']} !important;
-    border-radius: 12px !important;
-    background: {c['upload_bg']} !important;
+/* Success Alert */
+[data-testid="stAlert"][data-baseweb="notification"][kind="positive"] {{
+    background-color: rgba(16, 185, 129, 0.1) !important;
+    border: 1px solid rgba(16, 185, 129, 0.2) !important;
+    color: {c['success']} !important;
 }}
-[data-testid="stFileUploader"] section,
-[data-testid="stFileUploader"] section > div,
+
+/* ── DIVIDERS ────────────────────────────────────────────────────────── */
+
+hr {{
+    margin: 2rem 0 !important;
+    border-color: {c['hr']} !important;
+    opacity: 1 !important;
+}}
+
+/* ── FILE UPLOADER ────────────────────────────────────────────────────── */
+
 [data-testid="stFileUploadDropzone"] {{
-    background: {c['upload_bg']} !important;
-}}
-[data-testid="stFileUploader"] span,
-[data-testid="stFileUploader"] p,
-[data-testid="stFileUploader"] small {{
-    color: {c['text']} !important;
-}}
-
-/* ── Selectbox ────────────────────────────────────────────────────────── */
-[data-testid="stSelectbox"] > div > div {{
-    background: {c['select_bg']} !important;
-    border: 1px solid {c['card_border']} !important;
-    border-radius: 8px !important;
-}}
-[data-testid="stSelectbox"] span {{
-    color: {c['text']} !important;
+    background-color: {c['upload_bg']} !important;
+    border: 2px dashed {c['upload_border']} !important;
+    border-radius: 16px !important;
+    padding: 2rem !important;
+    transition: all 0.2s ease !important;
 }}
 
-/* ── Text / password input ────────────────────────────────────────────── */
-.stTextInput > div > div > input,
-.stTextArea > div > div > textarea {{
-    background: {c['input_bg']} !important;
-    color: {c['text']} !important;
-    border: 1px solid {c['card_border']} !important;
-    border-radius: 8px !important;
+[data-testid="stFileUploadDropzone"]:hover {{
+    border-color: {c['accent']} !important;
+    background-color: rgba(99, 102, 241, 0.05) !important;
 }}
 
-/* ── Progress bar ─────────────────────────────────────────────────────── */
-[data-testid="stProgressBar"] > div {{ background: {c['accent']} !important; }}
+/* ── LIGHT THEME SPECIFIC FIXES ────────────────────────────────────────── */
 
-/* ── Tabs ─────────────────────────────────────────────────────────────── */
-.stTabs [data-baseweb="tab-list"] {{
-    background-color: {c['tab_bg']};
-    border-radius: 8px;
-    padding: 4px;
+{"[data-testid='stMain'] *, .main *, [data-testid='stVerticalBlock'] * { color: " + c['text'] + " !important; }" if not self.is_dark else ""}
+
+/* Force white text in certain areas */
+.stButton > button[kind="primary"] span, 
+.stDownloadButton > button[kind="primary"] span,
+[data-baseweb="tab"][aria-selected="true"] span {{
+    color: white !important;
 }}
-.stTabs [data-baseweb="tab"] {{ color: {c['text_sub']}; }}
 
-/* ── Sidebar logo ─────────────────────────────────────────────────────── */
-.sidebar-logo {{
-    text-align: center;
-    padding: 24px 10px 8px 10px;
-    font-size: 26px;
-    font-weight: 800;
-    letter-spacing: 1px;
+/* ── CUSTOM CLASSES (USED IN PAGE MODULES) ───────────────────────────── */
+
+.premium-card {{
+    background: {c['card']};
+    border: 1px solid {c['card_border']};
+    {glass_effect}
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}}
+
+.premium-badge {{
+    background-color: {c['accent']};
     color: white;
-}}
-.sidebar-tagline {{
-    text-align: center;
+    padding: 4px 12px;
+    border-radius: 100px;
     font-size: 11px;
-    color: #7fa8d4;
-    margin-bottom: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
     letter-spacing: 0.5px;
 }}
 
-/* ── Meta card ────────────────────────────────────────────────────────── */
-.meta-card {{
-    background: {c['card']};
-    border: 1px solid {c['card_border']};
-    border-radius: 12px;
-    padding: 16px 18px;
-    height: 100%;
-    margin-bottom: 8px;
-}}
-.meta-label {{
-    font-size: 11px;
-    color: {c['text_muted']} !important;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-    font-weight: 500;
-}}
-.meta-value {{
-    font-size: 14px;
-    font-weight: 700;
-    color: {c['text']} !important;
-    line-height: 1.5;
-    word-break: break-word;
-}}
-
-/* ── Spinner ──────────────────────────────────────────────────────────── */
-[data-testid="stSpinner"] span {{ color: {c['text']} !important; }}
-
-{light_overrides}
 </style>
 """,
             unsafe_allow_html=True,

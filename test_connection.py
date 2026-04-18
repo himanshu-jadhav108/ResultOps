@@ -24,7 +24,7 @@ if not os.path.exists(key_path):
     print("  → Save it as 'firebase_key.json' in the ResultOps folder")
     sys.exit(1)
 
-print("✅ Key file found")
+print("[OK] Key file found")
 print("\nConnecting to Firebase...")
 
 try:
@@ -37,16 +37,16 @@ try:
 
     # Test read
     db.collection("semesters").limit(1).get()
-    print("✅ Firestore connected successfully!")
-    print("✅ Database read test passed!")
+    print("[OK] Firestore connected successfully!")
+    print("[OK] Database read test passed!")
     print()
-    print("🎉 Everything is working! Run:")
+    print("Everything is working! Run:")
     print("   streamlit run app.py")
 
 except Exception as e:
-    print(f"\n❌ Connection failed: {e}")
+    print(f"\n[ERROR] Connection failed: {e}")
     print("\nCommon causes:")
-    print("  • Wrong or corrupted firebase_key.json file")
-    print("  • Firestore not enabled in your Firebase project")
-    print("  • Internet connection issue")
+    print("  - Wrong or corrupted firebase_key.json file")
+    print("  - Firestore not enabled in your Firebase project")
+    print("  - Internet connection issue")
     sys.exit(1)

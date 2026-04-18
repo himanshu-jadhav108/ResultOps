@@ -1,5 +1,6 @@
 """
 Upload & Parse page — uses the robust metadata/student parsers.
+Includes parsing confidence score and enhanced progress UX.
 """
 
 import time
@@ -15,6 +16,111 @@ from utils.auth import auth_manager
 from utils.theme import theme_manager
 
 logger = logging.getLogger(__name__)
+
+
+# ── Parsing Confidence Score ──────────────────────────────────────────────────
+
+
+def _compute_confidence(metadata, students, validation) -> tuple[int, list[str]]:
+    """
+    Compute a 0-100 parsing confidence score.
+    Returns (score, list_of_issues).
+    """
+    score = 100
+    issues = []
+
+    # Metadata completeness (up to -25)
+    if not metadata.university_name or metadata.university_name in ("", "Unknown"):
+        score -= 8
+        issues.append("University name not detected")
+    if not metadata.college_name or metadata.college_name in ("", "Unknown"):
+        score -= 5
+        issues.append("College name not detected")
+    if not metadata.department_name or metadata.department_name in ("", "Unknown"):
+        score -= 7
+        issues.append("Department name not detected")
+    if not metadata.semester_number:
+        score -= 5
+        issues.append("Semester number not detected")
+
+    if not students:
+        return 0, ["No student records parsed"]
+
+    # Student data completeness (up to -35)
+    total = len(students)
+    missing_sgpa = sum(1 for s in students if s.sgpa is None)
+    missing_name = sum(1 for s in students if not s.name)
+    missing_prn = sum(1 for s in students if not s.prn)
+    no_subjects = sum(1 for s in students if not s.subjects)
+
+    if missing_sgpa > 0:
+        pct = missing_sgpa / total
+        deduct = int(pct * 20)
+        score -= deduct
+        issues.append(f"{missing_sgpa}/{total} students missing SGPA")
+    if missing_name > 0:
+        score -= min(int(missing_name / total * 10), 10)
+        issues.append(f"{missing_name}/{total} students missing name")
+    if missing_prn > 0:
+        score -= min(int(missing_prn / total * 10), 10)
+        issues.append(f"{missing_prn}/{total} students missing PRN")
+    if no_subjects > 0:
+        pct = no_subjects / total
+        score -= int(pct * 15)
+        issues.append(f"{no_subjects}/{total} students have no subject data")
+
+    # Validation warnings (up to -20)
+    warn_lines = [line for line in validation.summary_lines() if line.startswith("⚠️")]
+    error_lines = [line for line in validation.summary_lines() if line.startswith("❌")]
+    score -= min(len(warn_lines) * 3, 10)
+    score -= min(len(error_lines) * 5, 10)
+    if warn_lines:
+        issues.append(f"{len(warn_lines)} validation warning(s)")
+    if error_lines:
+        issues.append(f"{len(error_lines)} validation error(s)")
+
+    return max(0, min(100, score)), issues
+
+
+def _render_confidence(score: int, issues: list[str]):
+    """Render a colour-coded confidence score bar. Fully theme-aware."""
+    c = theme_manager.colors
+    if score >= 85:
+        color, label = c["success"], "Excellent"
+    elif score >= 65:
+        color, label = c["warning"], "Good"
+    elif score >= 40:
+        color, label = "#f97316", "Fair"  # Orange
+    else:
+        color, label = c["error"], "Poor"
+
+    issues_html = (
+        "<ul style='margin-top:12px;padding-left:18px;line-height:1.6;font-size:13px;'>"
+        + "".join(
+            f"<li style='color:{c['text_sub']};margin-bottom:4px;'>{i}</li>"
+            for i in issues
+        )
+        + "</ul>"
+        if issues
+        else f"<div style='color:{c['success']};font-size:13px;margin-top:10px;font-weight:600;'>✅ No issues detected — data looks complete.</div>"
+    )
+
+    st.markdown(
+        f"""
+<div class="premium-card" style="border-left: 5px solid {color};">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+    <span style="font-size:14px; font-weight:700; color:{c['text_muted']}; text-transform:uppercase; letter-spacing:1px;"
+    >🎯 Parsing Confidence</span>
+    <span style="font-size:20px; font-weight:800; color:{color};">{score}% — {label}</span>
+  </div>
+  <div style="background: {c['card_border']}; border-radius:100px; height:8px; overflow:hidden;">
+    <div style="background:{color}; width:{score}%; height:100%; border-radius:100px; 
+                transition:width 1s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 12px {color}44;"></div>
+  </div>
+  {issues_html}
+</div>""",
+        unsafe_allow_html=True,
+    )
 
 
 def _sgpa_category(sgpa):
@@ -238,24 +344,31 @@ def render():
     pdf_bytes = uploaded_file.read()
 
     # ── Parse ──────────────────────────────────────────────────────────────────
-    progress = st.progress(0, text="Starting...")
+    progress = st.progress(0, text="⏳ Initialising parser…")
     try:
         from parser.pdf_parser import extract_text_from_pdf
         from parser.metadata_extractor import extract_metadata
         from parser.student_parser import parse_students
         from utils.validators import validate_students
 
-        progress.progress(20, text="📖 Extracting text from PDF...")
+        progress.progress(15, text="📖 Stage 1/4 — Extracting text from PDF…")
         full_text = extract_text_from_pdf(pdf_bytes)
 
-        progress.progress(50, text="🔍 Detecting metadata...")
+        progress.progress(
+            40, text="🔍 Stage 2/4 — Detecting metadata (University, Dept, Semester)…"
+        )
         metadata = extract_metadata(full_text)
 
-        progress.progress(75, text="👥 Parsing student records...")
+        progress.progress(70, text="👥 Stage 3/4 — Parsing student records…")
         students = parse_students(full_text)
 
-        progress.progress(100, text="✅ Done!")
-        time.sleep(0.3)
+        progress.progress(90, text="✅ Stage 4/4 — Validating data…")
+        validation = validate_students(
+            students, expected_semester=metadata.semester_number
+        )
+
+        progress.progress(100, text=f"✅ Done! Parsed {len(students)} students.")
+        time.sleep(0.4)
         progress.empty()
 
     except Exception as e:
@@ -282,9 +395,10 @@ def render():
         with col:
             st.markdown(
                 f"""
-            <div class="meta-card" style="border-top:3px solid {border_color};">
-                <div class="meta-label">{label}</div>
-                <div class="meta-value">{value}</div>
+            <div class="premium-card" style="border-top:3px solid {border_color}; padding: 18px;">
+                <div style="font-size:10px; text-transform:uppercase; color:{c['text_muted']}; 
+                            letter-spacing:1px; font-weight:700; margin-bottom:10px;">{label}</div>
+                <div style="font-size:14px; font-weight:700; color:{c['text']}; line-height:1.4;">{value}</div>
             </div>""",
                 unsafe_allow_html=True,
             )
@@ -293,10 +407,24 @@ def render():
     st.markdown("---")
 
     st.markdown("### 🧪 Validation Report")
-    validation = validate_students(students, expected_semester=metadata.semester_number)
+    # validation already computed during parse stage above
+
+    # ── Confidence Score ──────────────────────────────────────────────────────
+    conf_score, conf_issues = _compute_confidence(metadata, students, validation)
+    _render_confidence(conf_score, conf_issues)
 
     v1, v2 = st.columns([3, 2])
     with v1:
+        warn_count = sum(
+            1 for line in validation.summary_lines() if line.startswith("⚠️")
+        )
+        err_count = sum(
+            1 for line in validation.summary_lines() if line.startswith("❌")
+        )
+        if warn_count or err_count:
+            st.caption(
+                f"⚠️ {warn_count} warning(s) · ❌ {err_count} error(s) detected during validation"
+            )
         for line in validation.summary_lines():
             if line.startswith("✅"):
                 st.success(line)
@@ -309,12 +437,12 @@ def render():
         if validation.is_valid:
             st.markdown(
                 f"""
-            <div style="background:#0a2e1a; border:1px solid {c['success']};
+            <div style="background:{c['card']}; border:2px solid {c['success']};
                         border-radius:12px; padding:28px; text-align:center;">
                 <div style="font-size:40px;">✅</div>
                 <div style="font-size:17px; font-weight:700; color:{c['success']}; margin-top:10px;">
                     Validation Passed</div>
-                <div style="color:#4dbb88; margin-top:6px; font-size:13px;">
+                <div style="color:{c['success']}; opacity:0.8; margin-top:6px; font-size:13px;">
                     Ready to save to database</div>
             </div>""",
                 unsafe_allow_html=True,
@@ -322,12 +450,12 @@ def render():
         else:
             st.markdown(
                 f"""
-            <div style="background:#2e0a0a; border:1px solid {c['error']};
+            <div style="background:{c['card']}; border:2px solid {c['error']};
                         border-radius:12px; padding:28px; text-align:center;">
                 <div style="font-size:40px;">❌</div>
                 <div style="font-size:17px; font-weight:700; color:{c['error']}; margin-top:10px;">
                     Validation Failed</div>
-                <div style="color:#cc6677; margin-top:6px; font-size:13px;">
+                <div style="color:{c['error']}; opacity:0.8; margin-top:6px; font-size:13px;">
                     Fix errors before saving</div>
             </div>""",
                 unsafe_allow_html=True,
